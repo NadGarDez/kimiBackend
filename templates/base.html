@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}My Site{% endblock %}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header>
+        {% block header %}
+        <h1>Kimi Backoffice</h1>
+        {% endblock %}
+    </header>
+    <nav>
+        {% block nav %}{% endblock %}
+    </nav>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        {% block footer %}
+        <p>&copy; {{ year|default:"2024" }} My Site</p>
+        {% endblock %}
+    </footer>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
