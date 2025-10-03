@@ -1,13 +1,15 @@
 from django.urls import path
 from . import views
 
+app_name = 'contractRegistry'
+
 urlpatterns = [
     path('', views.index, name='index'),
-    path('contract/list/', views.contract_list, name='contract_list'),
-    path('contract/<int:contract_id>/', views.contract_detail, name='contract_detail'),
-    path('contract/register/', views.register_contract, name='register_contract'),
-    path('version/<int:version_id>/', views.version_detail, name='version_detail'),
-    path('version/register/<int:contract_id>/', views.register_version, name='register_version'),
-    path('deployed/<int:deployed_id>/', views.deployed_contract_detail, name='deployed_contract_detail'),
-    path('deploy/<int:contract_id>/<int:version_id>/', views.deploy_contract, name='deploy_contract'),
+    path('contract/list/', views.contractList, name='contract_list'),
+    path('contract/<int:contract_id>/', views.contractDetail, name='contract_detail'),
+    path('contract/register/', views.registerContract, name='register_contract'),
+    path('version/<int:version_id>/', views.versionDetail, name='version_detail'),
+    path('version/register/<int:contract_id>/', views.registerVersion, name='register_version'),
+    path('deployed/<int:deployed_id>/', views.deployedContractDetail, name='deployed_contract_detail'),
+    path('deploy/<int:contract_id>/<int:version_id>/', views.deployContract, name='deploy_contract'),
 ]

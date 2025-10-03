@@ -1,31 +1,220 @@
 <!DOCTYPE html>
 {% load static %}
-<script src="{% static 'js/ethers.umd.min.js' %}"></script>
+{% load bootstrap5 %}
 
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>{% block title %}My Site{% endblock %}</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% block extra_head %}{% endblock %}
-</head>
-<body>
-    <header>
-        {% block header %}
-        <h1>Kimi Backoffice</h1>
-        {% endblock %}
+  <head>
+    <meta charset="UTF-8" />
+    <title>
+      {% block title %}
+        Kimi Backoffice
+      {% endblock %}
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    {% bootstrap_css %}
+
+    {% block styles %}
+      <style>
+        /* Paleta Tech Noir: Sobrio y Profesional */
+        :root {
+          --base-bg: #121212; /* Fondo Principal */
+          --card-bg: #1e1e1e; /* Tarjetas/Contenedores */
+          --accent: #00bcd4; /* Acento: Cian/Azul Eléctrico */
+          --success: #4caf50; /* Éxito/Estado OK */
+          --text-light: #e0e0e0; /* Texto Principal */
+          --text-dim: #a0a0a0; /* Texto Secundario */
+        }
+        
+        body {
+          background-color: var(--base-bg);
+          color: var(--text-light);
+          font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+          margin: 0;
+          padding: 0;
+        }
+        
+        /* Contenedor principal centrado */
+        .centered-container {
+          max-width: 1000px;
+          padding: 0 15px; /* Padding horizontal para móviles */
+        }
+        
+        /* Encabezado y Navegación */
+        .app-header {
+          background-color: var(--card-bg);
+          border-bottom: 3px solid var(--accent);
+          box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        .app-nav .nav-link {
+          color: var(--text-light) !important;
+          transition: color 0.3s, border-bottom 0.3s;
+        }
+        .app-nav .nav-link:hover {
+          color: var(--accent) !important;
+          border-bottom: 2px solid var(--accent);
+        }
+        
+        /* Contenido Principal (El contenedor de Main) */
+        .main-content {
+          background-color: var(--card-bg);
+          border-radius: 8px;
+          padding: 25px;
+          box-shadow: 0 0 15px rgba(0, 0, 0, 0.4);
+          margin-top: 20px;
+          min-height: 70vh;
+        }
+        
+        /* Títulos */
+        h1,
+        h2,
+        h3 {
+          color: var(--accent);
+          border-bottom: 1px solid rgba(0, 188, 212, 0.3);
+          padding-bottom: 5px;
+          margin-bottom: 20px;
+        }
+        
+        /* Footer */
+        .app-footer {
+          border-top: 1px solid rgba(0, 188, 212, 0.3);
+          padding-top: 10px;
+          margin-top: 20px;
+          color: var(--text-dim);
+          font-size: 0.8rem;
+        }
+        
+        .status-card {
+          background-color: var(--card-bg); /* Fondo oscuro */
+          border: 1px solid rgba(0, 188, 212, 0.2); /* Borde sutil del acento */
+          border-radius: 8px;
+          transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .status-card:hover {
+          transform: translateY(-5px);
+          /* Sombra con el color de acento (la "luz de fondo") */
+          box-shadow: 0 10px 20px rgba(0, 188, 212, 0.25);
+        }
+        
+        .status-header {
+          /* Estilo del encabezado azul/cian suave */
+          background-color: rgba(0, 188, 212, 0.1);
+          color: var(--accent);
+          padding: 15px 20px;
+          border-top-left-radius: 8px;
+          border-top-right-radius: 8px;
+          font-weight: bold;
+          border-bottom: 1px solid rgba(0, 188, 212, 0.3);
+        }
+        
+        /* Forzar que el enlace dentro del card use el color de texto del backoffice */
+        .status-card a {
+          color: inherit !important;
+          text-decoration: none !important;
+        }
+        
+        /* Botones de acento (para acciones principales) */
+        .btn-accent {
+          background-color: var(--accent);
+          border-color: var(--accent);
+          color: var(--base-bg);
+        }
+        .btn-accent:hover {
+          background-color: #00a3b5;
+          border-color: #00a3b5;
+          color: var(--base-bg);
+          transform: translateY(-1px);
+        }
+        
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-welcome {
+          animation: fadeIn 1s ease-out 0.2s forwards;
+          opacity: 0;
+        }
+        
+        .animate-status {
+          animation: fadeIn 1s ease-out forwards;
+          opacity: 0;
+        }
+        .animate-status:nth-child(1) {
+          animation-delay: 0.5s;
+        }
+        .animate-status:nth-child(2) {
+          animation-delay: 0.7s;
+        }
+        .animate-status:nth-child(3) {
+          animation-delay: 0.9s;
+        }
+      </style>
+    {% endblock %}
+
+    {% block extra_head %}
+
+    {% endblock %}
+  </head>
+  <body>
+    <script src="{% static 'js/ethers.umd.min.js' %}"></script>
+    {% bootstrap_javascript %}
+
+    <header class="app-header sticky-top">
+      <div class="centered-container mx-auto">
+        <div class="d-flex justify-content-between align-items-center py-3">
+          {% block header %}
+            <h1 class="h3 mb-0 text-white">Kimi Backoffice</h1>
+          {% endblock %}
+
+          <nav class="app-nav">
+            {% block nav %}
+              <ul class="nav">
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'project_index' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'contractRegistry:index' %}">Registry</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'tickets:index' %}">Tickets</a>
+                </li>
+                <li class="nav-item">
+                  <a class="nav-link" href="{% url 'hashPool:index' %}">HashPools</a>
+                </li>
+              </ul>
+            {% endblock %}
+          </nav>
+        </div>
+      </div>
     </header>
-    <nav>
-        {% block nav %}{% endblock %}
-    </nav>
-    <main>
-        {% block content %}{% endblock %}
-    </main>
-    <footer>
-        {% block footer %}
-        <p>&copy; {{ year|default:"2024" }} My Site</p>
+
+    <div class="centered-container mx-auto">
+      <main class="main-content">
+        {% block content %}
+
         {% endblock %}
+      </main>
+    </div>
+
+    <footer class="app-footer">
+      <div class="centered-container mx-auto text-center">
+        {% block footer %}
+          <p>&copy; {{ year|default:'2024' }} Kimi Backoffice | Blockchain Registry</p>
+        {% endblock %}
+      </div>
     </footer>
-    {% block extra_scripts %}{% endblock %}
-</body>
+
+    {% block extra_scripts %}
+
+    {% endblock %}
+  </body>
 </html>

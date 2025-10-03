@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'tickets.apps.TicketsConfig',
     'hashPool.apps.HashpoolConfig',
     'contractRegistry.apps.ContractregistryConfig',
+    'bootstrap5',
 ]
 
 MIDDLEWARE = [

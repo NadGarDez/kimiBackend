@@ -16,9 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from .views import projectIndex
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('tickets/', include('tickets.urls')),
     path('hashPool/', include('hashPool.urls')),
+    path('contractRegistry/', include('contractRegistry.urls')),
+    path('', projectIndex, name='project_index'),
 ]

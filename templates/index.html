@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Kimi Backoffice - Dashboard{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content">
+    
+    <div class="welcome-card animate-welcome">
+        <h2 class="h3 text-accent mb-2">👋 Bienvenido al Backoffice Kimi Platform</h2>
+        <p class="mb-0 text-text-dim">Tu portal de gestión para la infraestructura blockchain. Aquí monitoreas y controlas la creación de Pools y el estado de la red.</p>
+    </div>
+
+    <h3 class="text-text-light mb-4 mt-4">Aplicaciones Principales</h3>
+
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        
+        <div class="col">
+            <a href="{% url 'contractRegistry:index' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status h-100">
+                    <div class="status-header">
+                        <i class="bi bi-file-earmark-code"></i> <span class="fw-bold">Registry (Contratos)</span>
+                    </div>
+                    <div class="status-body p-2">
+                        <p class="status-value text-accent mb-2">
+                            <i class="bi bi-gear"></i>
+                        </p>
+                        <small class="text-text-dim">Gestión de versiones y direcciones activas.</small>
+                        <p class="small text-status-ok mt-2 mb-0 d-block">Configuración crítica.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{% url 'tickets:index' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status" style="animation-delay: 0.7s;">
+                    <div class="status-header">
+                        <i class="bi bi-ticket-fill"></i> <span class="fw-bold">Tickets (Activos)</span>
+                    </div>
+                    <div class="status-body p-2">
+                        <p class="status-value mb-2">
+                            <i class="bi bi-graph-up-arrow"></i>
+                        </p>
+                        <small class="text-text-dim">Monitoreo de tokens y estadísticas de uso.</small>
+                        <p class="small text-status-ok mt-2 mb-0 d-block">Ver el estado del contrato TicketManager.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{% url 'hashPool:index' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status" style="animation-delay: 0.9s;">
+                    <div class="status-header">
+                        <i class="bi bi-bricks"></i> <span class="fw-bold">HashPools (Ecosistema)</span>
+                    </div>
+                    <div class="status-body p-2">
+                        <p class="status-value text-accent mb-2">
+                            <i class="bi bi-plus-circle"></i>
+                        </p>
+                        <small class="text-text-dim">Creación, gestión y seguimiento de instancias de Pools.</small>
+                        <p class="small text-status-ok mt-2 mb-0 d-block">Acciones de negocio principales.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col">
+            <div class="card bg-dark text-white status-card animate-status" style="animation-delay: 1.1s;">
+                <div class="status-header">
+                    <i class="bi bi-wallet2"></i> <span class="fw-bold">Balance de Tesorería</span>
+                </div>
+                <div class="status-body p-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-text-dim">Recaudos (Tickets):</small>
+                        <span class="small text-success fw-bold">12,500.00 ETH</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-text-dim">Transferencias (Ganadores):</small>
+                        <span class="small text-danger fw-bold">- 8,100.00 ETH</span>
+                    </div>
+                    <hr class="text-text-dim my-2">
+                    <div class="d-flex justify-content-between">
+                        <span class="fw-bold">Saldo Utilizable:</span>
+                        <span class="status-value text-accent small">4,400.00 ETH</span>
+                    </div>
+                    <p class="small text-text-dim mt-2 mb-0 d-block">Monitoreo de fondos y liquidez.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    
+    <div class="mt-5">
+        <h4 class="text-text-light">Tareas Recientes & Logs</h4>
+        <div class="p-3 text-text-dim tasks-log bg-dark" style="border-radius: 5px;">
+            <ul class="list-unstyled mb-0 small">
+                <li><span class="text-success">✅</span> Pool #142 Creado (1m ago)</li>
+                <li><span class="text-warning">⚠️</span> Gas Price Alto (30 Gwei)</li>
+                <li><span class="text-success">✅</span> Hotfix v2.1.3 Activado (1h ago)</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
