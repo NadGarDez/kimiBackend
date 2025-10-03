@@ -4,10 +4,10 @@ from django.http import HttpResponse
 # Create your views here.
 
 def index(request):
-    return HttpResponse("Hello, world. You're at the contractRegistry index.")
+    return contractList(request)
 
 def contractList(request):
-    return HttpResponse("List of contracts will be displayed here.")
+    return render(request, 'contractRegistry/contractList.html')
 
 def contractDetail(request, contract_id):
     return HttpResponse(f"Details of contract {contract_id} will be displayed here.")

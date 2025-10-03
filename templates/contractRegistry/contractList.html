@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Lista de Contratos{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content">
+    
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">Registro de Contratos Base</h2>
+        
+        <a href="{% url 'contractRegistry:register_contract' %}" 
+           class="btn btn-accent rounded-circle p-0" 
+           style="width: 40px; height: 40px; line-height: 40px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center;"
+           title="Agregar Nuevo Contrato">
+            
+            <i class="bi bi-plus-lg fw-bold text-dark"></i> 
+        </a>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-2"> 
+    
+    <div class="mb-2 welcome-card p-3">
+        <p class="mb-0 text-text-dim">
+            Aquí se encuentran todos los contratos base (ej. HashPoolAdmin, TicketManager) registrados en el sistema, listos para ser versionados y desplegados.
+        </p>
+    </div>
+
+    <div class="card status-card p-3">
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover"> 
+                <thead class="bg-dark">
+                    <tr>
+                        <th scope="col" class="text-accent fw-bold">#</th>
+                        <th scope="col" class="text-accent fw-bold">Nombre del Contrato</th>
+                        <th scope="col" class="text-accent fw-bold">Última Versión Registrada</th>
+                        <th scope="col" class="text-accent fw-bold">Fecha de Registro</th>
+                        <th scope="col" class="text-accent fw-bold">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="align-middle">
+                        <th scope="row">1</th>
+                        <td class="fw-bold text-light">HashPoolAdmin</td>
+                        <td class="text-text-dim text-status-ok">v2.1.3</td>
+                        <td class="text-text-dim">2024-08-15</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-info fw-bold">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                    <tr class="align-middle">
+                        <th scope="row">2</th>
+                        <td class="fw-bold text-light">TicketManager</td>
+                        <td class="text-text-dim">v1.0.0</td>
+                        <td class="text-text-dim">2024-09-01</td>
+                        <td>
+                            <a href="#" class="btn btn-sm btn-outline-info fw-bold">
+                                Ver
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
