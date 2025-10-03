@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'partidas.apps.PartidasConfig',
     'tickets.apps.TicketsConfig',
     'hashPool.apps.HashpoolConfig',
+    'contractRegistry.apps.ContractregistryConfig',
 ]
 
 MIDDLEWARE = [
