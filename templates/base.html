@@ -12,8 +12,8 @@
     </title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     {% bootstrap_css %}
 
     {% block styles %}
@@ -94,6 +94,12 @@
           transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
+        .status-card-table {
+          background-color: var(--card-bg);
+          border: 1px solid rgba(0, 188, 212, 0.2);
+          border-radius: 8px;
+        }
+        
         .status-card:hover {
           transform: translateY(-5px);
           /* Sombra con el color de acento (la "luz de fondo") */
@@ -158,6 +164,19 @@
         }
         .animate-status:nth-child(3) {
           animation-delay: 0.9s;
+        }
+        
+        @keyframes spin {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        .animate-spin {
+          animation: spin 0.5s ease-out 0.2s 1;
         }
       </style>
     {% endblock %}
