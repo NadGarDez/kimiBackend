@@ -25,7 +25,7 @@ def deployedContractDetail(request, deployed_id):
     return HttpResponse(f"Details of deployed contract {deployed_id} will be displayed here.")
 
 def registerContract(request):
-    return HttpResponse("Contract registration form will be displayed here.")
+    return render(request, 'contractRegistry/register_contract.html')
 
 def registerVersion(request, contract_id):
     return HttpResponse(f"Version registration form for contract {contract_id} will be displayed here.")
