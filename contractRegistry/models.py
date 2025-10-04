@@ -71,6 +71,7 @@ class DeployedContract(models.Model):
     network = models.ForeignKey(Network, on_delete=models.PROTECT, related_name='deployed_contracts')
     gas_used = models.BigIntegerField(null=True, blank=True)
     is_current = models.BooleanField(default=False) 
+    base_contract = models.ForeignKey(BaseContract, on_delete=models.CASCADE, related_name='deployed_instances', editable=False, db_index=False)
 
     class Meta:
         constraints = [
@@ -79,9 +80,9 @@ class DeployedContract(models.Model):
                 name='unique_address_per_network'
             ),
             UniqueConstraint(
-                fields=['network', 'contract_version__base_contract'],
+                fields=['network', 'base_contract'],
                 condition=Q(is_current=True),
-                name='unique_current_contract_per_type_and_network'
+                name='unique_deployment_per_base_contract_per_network'
             )
         ]
 

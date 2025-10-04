@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .staticData import STATIC_CONTRACT_DATA
 from django.shortcuts import redirect
+from .forms import DeployForm, NetworkForm
 
 # Create your views here.
 
@@ -47,5 +48,14 @@ def registerVersion(request, contract_id):
     }
     return render(request, 'contractRegistry/register_version.html', context)
 
-def deployContract(request, contract_id, version_id):
-    return HttpResponse(f"Deployment form for version {version_id} of contract {contract_id} will be displayed here.")
+def deployContract(request):
+    deploy_form = DeployForm()
+    add_network_form = NetworkForm()
+
+    context = {
+        'deploy_form': deploy_form,
+        'add_network_form': add_network_form,
+        # Necesitarás pasar cualquier otra variable necesaria, como el ContractVersion
+    }
+    
+    return render(request, 'contractRegistry/deploy_version.html', context)

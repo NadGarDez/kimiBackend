@@ -1,0 +1,168 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Desplegar Versión de Contrato{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content py-4" style="max-width: 900px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
+            Desplegar Contrato a la Red
+        </h2>
+        
+        <a href="{% url 'contractRegistry:index' %}" 
+           class="btn btn-outline-info fw-bold text-uppercase">
+            <i class="bi bi-arrow-left-circle me-2"></i> Volver a la Lista
+        </a>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-2"> 
+    
+    <div class="mb-2 welcome-card p-4">
+        <p class="mb-0 text-text-dim">
+            Selecciona el contrato, la versión y la red de destino. Una vez seleccionado, se mostrarán los argumentos de constructor requeridos.
+        </p>
+    </div>
+
+    <!-- SECCIÓN 1: SELECCIÓN DE PARÁMETROS DE DESPLIEGUE (USA deploy_form) -->
+    <div class="card status-card-table p-4 mb-4">
+        
+        <h4 class="text-text-light mb-4">Selección de Artefactos y Red</h4>
+        
+        <!-- Usamos el formulario principal de despliegue -->
+        <form id="deployment-form" method="post">
+            {% csrf_token %}
+            
+            <div class="row">
+                <!-- Select 1: Contrato Base -->
+                <div class="col-md-6 mb-3">
+                    <label for="{{ deploy_form.base_contract.id_for_label }}" class="form-label text-accent">
+                        Contrato Base
+                    </label>
+                    {{ deploy_form.base_contract }} 
+                    <div class="form-text text-text-dim">Contrato lógico a desplegar.</div>
+                    {% if deploy_form.base_contract.errors %}
+                        <div class="text-warning mt-1">{{ deploy_form.base_contract.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Select 2: Versión -->
+                <div class="col-md-6 mb-3">
+                    <label for="{{ deploy_form.version.id_for_label }}" class="form-label text-accent">
+                        Versión Registrada
+                    </label>
+                    {{ deploy_form.version }}
+                    <div class="form-text text-text-dim">Bytecode y ABI asociados.</div>
+                    {% if deploy_form.version.errors %}
+                        <div class="text-warning mt-1">{{ deploy_form.version.errors }}</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Select 3: Red (Network) y Botón de Añadir -->
+            <div class="mb-4">
+                <label for="{{ deploy_form.network.id_for_label }}" class="form-label text-accent">
+                    Red de Destino
+                </label>
+                <div class="input-group">
+                    {{ deploy_form.network }}
+                    
+                    <button type="button" 
+                            class="btn btn-warning fw-bold text-uppercase" 
+                            data-bs-toggle="collapse" 
+                            data-bs-target="#collapseAddNetwork" 
+                            aria-expanded="false" 
+                            aria-controls="collapseAddNetwork">
+                        <i class="bi bi-plus-lg me-1"></i> Añadir Red
+                    </button>
+                </div>
+                <div class="form-text text-text-dim">Red blockchain donde se ejecutará el despliegue.</div>
+                
+                {% if deploy_form.network.errors %}
+                    <div class="text-warning mt-1">{{ deploy_form.network.errors }}</div>
+                {% endif %}
+            </div>
+            <!-- NOTA: El botón de envío final se encuentra en la Sección 3, después de los argumentos dinámicos -->
+        </form>
+    </div>
+
+    <!-- SECCIÓN 2: FORMULARIO CONDICIONAL PARA AÑADIR RED (USA add_network_form) -->
+    <div class="collapse mb-4" id="collapseAddNetwork">
+        <div class="card status-card-table p-4 bg-dark-subtle border-warning">
+            <h5 class="text-warning mb-3">Registrar Nueva Red</h5>
+            
+            <!-- Usamos el formulario NetworkForm. Debes definir 'contractRegistry:register_network' en urls.py -->
+            <form id="add-network-form" method="post" action="#">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <!-- Nombre -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ add_network_form.name.id_for_label }}" class="form-label text-accent">Nombre</label>
+                        {{ add_network_form.name }}
+                        {% if add_network_form.name.errors %}
+                            <div class="text-warning mt-1">{{ add_network_form.name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- RPC URL -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ add_network_form.rpc_url.id_for_label }}" class="form-label text-accent">URL RPC</label>
+                        {{ add_network_form.rpc_url }}
+                        {% if add_network_form.rpc_url.errors %}
+                            <div class="text-warning mt-1">{{ add_network_form.rpc_url.errors }}</div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Chain ID -->
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ add_network_form.chain_id.id_for_label }}" class="form-label text-accent">Chain ID</label>
+                        {{ add_network_form.chain_id }}
+                        {% if add_network_form.chain_id.errors %}
+                            <div class="text-warning mt-1">{{ add_network_form.chain_id.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <button type="submit" class="btn btn-warning fw-bold text-uppercase">
+                    <i class="bi bi-save me-2"></i> Guardar y Seleccionar
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- SECCIÓN 3: ARGUMENTOS DEL CONSTRUCTOR (Dinámico) -->
+    <!-- Notar que esta sección está fuera del formulario principal. Los argumentos
+         tendrán que ser inyectados DENTRO del formulario #deployment-form con JS antes de enviar,
+         o manejarse con un solo botón de envío que esté fuera de la etiqueta form.
+         Mantendremos el botón fuera de momento.
+    -->
+    <div id="constructor-args-container" class="card status-card-table p-4 border-info">
+        <h4 class="text-text-light mb-4">Argumentos del Constructor (<span id="arg-count">0</span> Requeridos)</h4>
+        
+        <p id="args-message" class="text-text-dim">
+            Selecciona el contrato y la versión para ver los argumentos requeridos.
+        </p>
+        
+        <div id="dynamic-args">
+            <!-- Los campos del constructor se inyectarán aquí -->
+        </div>
+        
+        <!-- Botón de Despliegue Final -->
+        <div class="d-grid mt-4">
+            <!-- Este botón debe activar la lógica de despliegue después de seleccionar los argumentos -->
+            <button type="button" class="btn btn-info fw-bold text-uppercase disabled">
+                <i class="bi bi-rocket-takeoff me-2"></i> Iniciar Despliegue
+            </button>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<!-- NOTA: Se requiere JavaScript/AJAX para que los selects se comuniquen y se inyecten los argumentos. -->
+{% endblock %}
