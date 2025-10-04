@@ -35,7 +35,17 @@ def registerContract(request):
     return render(request, 'contractRegistry/register_contract.html')
 
 def registerVersion(request, contract_id):
-    return HttpResponse(f"Version registration form for contract {contract_id} will be displayed here.")
+    if request.method == "POST":
+        version_name = request.POST.get("version_name")
+        version_id = 1
+
+        return redirect('contractRegistry:contract_detail', contract_id=contract_id)
+    contract_data = STATIC_CONTRACT_DATA
+    context = {
+        'contract_id': contract_id,
+        'contract': contract_data
+    }
+    return render(request, 'contractRegistry/register_version.html', context)
 
 def deployContract(request, contract_id, version_id):
     return HttpResponse(f"Deployment form for version {version_id} of contract {contract_id} will be displayed here.")

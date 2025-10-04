@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Agregar Nueva Versión{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content py-4" style="max-width: 900px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
+            Nueva Versión para: <span class="fw-bold text-light">{{ contract.name }}</span>
+        </h2>
+        
+        <a href="{% url 'contractRegistry:contract_detail' contract_id=1 %}" 
+           class="btn btn-outline-info fw-bold text-uppercase">
+            <i class="bi bi-arrow-left-circle me-2"></i> Volver al Detalle
+        </a>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-2"> 
+    
+    <div class="mb-2 welcome-card p-4">
+        <p class="mb-0 text-text-dim">
+            Carga los artefactos de código (Bytecode y ABI) y define los metadatos para la nueva versión de  <strong>{{ contract.name }}</strong>.
+        </p>
+    </div>
+
+    <div class="card status-card-table p-4">
+        
+        <h4 class="text-text-light mb-4">Artefactos de Código</h4>
+        
+        <form method="post">
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label for="{{ form.version.id_for_label }}" class="form-label text-accent">
+                    Número de Versión
+                </label>
+                
+                <input 
+                    type="text" 
+                    class="form-control bg-dark text-light border border-info" 
+                    id="{{ form.version.id_for_label }}" 
+                    name="{{ form.version.name }}" 
+                    value="{{ form.version.value|default:'' }}"
+                    required 
+                    placeholder="Ejemplo: v1.0.0"
+                >
+
+                {% if form.version.errors %}
+                    <div class="text-warning mt-1">{{ form.version.errors }}</div>
+                {% endif %}
+                
+                <div class="form-text text-text-dim">Formato recomendado: `vX.Y.Z`</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.bytecode.id_for_label }}" class="form-label text-accent">
+                    Bytecode (Código de Despliegue)
+                </label>
+                <textarea 
+                    class="form-control bg-dark text-light border border-info" 
+                    id="{{ form.bytecode.id_for_label }}" 
+                    name="{{ form.bytecode.name }}"
+                    rows="8" 
+                    required 
+                    placeholder="0x608060405234801561001057600080fd5b5060..."
+                    style="font-family: monospace;"
+                >{{ form.bytecode.value|default:'' }}</textarea>
+                 {% if form.bytecode.errors %}
+                    <div class="text-warning mt-1">{{ form.bytecode.errors }}</div>
+                {% endif %}
+                <div class="form-text text-text-dim">Código compilado sin la parte de argumentos del constructor.</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.abi.id_for_label }}" class="form-label text-accent">
+                    ABI (Application Binary Interface)
+                </label>
+                <textarea 
+                    class="form-control bg-dark text-light border border-info" 
+                    id="{{ form.abi.id_for_label }}" 
+                    name="{{ form.abi.name }}"
+                    rows="8" 
+                    required 
+                    placeholder='[{"inputs": [], "stateMutability": "nonpayable", ...}]'
+                    style="font-family: monospace;"
+                >{{ form.abi.value|default:'' }}</textarea>
+                 {% if form.abi.errors %}
+                    <div class="text-warning mt-1">{{ form.abi.errors }}</div>
+                {% endif %}
+                <div class="form-text text-text-dim">Array JSON que describe las funciones y eventos del contrato.</div>
+            </div>
+
+            <div class="mb-4">
+                <label for="{{ form.constructor_args_info.id_for_label }}" class="form-label text-accent">
+                    Información de Argumentos del Constructor
+                </label>
+                <textarea 
+                    class="form-control bg-dark text-light border border-info" 
+                    id="{{ form.constructor_args_info.id_for_label }}" 
+                    name="{{ form.constructor_args_info.name }}"
+                    rows="4" 
+                    placeholder='[{"name": "owner", "type": "address"}, {"name": "initialSupply", "type": "uint256"}]'
+                    style="font-family: monospace;"
+                >{{ form.constructor_args_info.value|default:'' }}</textarea>
+                 {% if form.constructor_args_info.errors %}
+                    <div class="text-warning mt-1">{{ form.constructor_args_info.errors }}</div>
+                {% endif %}
+                <div class="form-text text-text-dim">Metadata JSON del ABI, o formato simplificado, para el constructor. Necesario para el despliegue.</div>
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-warning fw-bold text-uppercase">
+                    <i class="bi bi-upload me-2"></i> Cargar Versión
+                </button>
+            </div>
+        </form>
+        
+    </div>
+</div>
+
+{% endblock %}
