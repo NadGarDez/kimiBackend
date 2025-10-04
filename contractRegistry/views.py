@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from .staticData import STATIC_CONTRACT_DATA
+from django.shortcuts import redirect
 
 # Create your views here.
 
@@ -25,6 +26,12 @@ def deployedContractDetail(request, deployed_id):
     return HttpResponse(f"Details of deployed contract {deployed_id} will be displayed here.")
 
 def registerContract(request):
+    if request.method == "POST":
+        contract_name = request.POST.get("name")
+        contract_id = 1 
+        
+        return redirect('contractRegistry:contract_detail', contract_id=contract_id)
+    
     return render(request, 'contractRegistry/register_contract.html')
 
 def registerVersion(request, contract_id):
