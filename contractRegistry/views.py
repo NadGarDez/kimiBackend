@@ -1,5 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse
+from .staticData import STATIC_CONTRACT_DATA
 
 # Create your views here.
 
@@ -10,7 +11,12 @@ def contractList(request):
     return render(request, 'contractRegistry/contractList.html')
 
 def contractDetail(request, contract_id):
-    return HttpResponse(f"Details of contract {contract_id} will be displayed here.")
+    contract_data = STATIC_CONTRACT_DATA 
+
+    context = {
+        'contract': contract_data
+    }
+    return render(request, 'contractRegistry/contractDetail.html', context)
 
 def versionDetail(request, contract_id, version_id):
     return HttpResponse(f"Details of version {version_id} for contract {contract_id} will be displayed here.")

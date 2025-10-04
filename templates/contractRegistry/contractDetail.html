@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Detalle del Contrato{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
+            Detalle del Contrato: <span class="fw-bold text-light">{{ contract.name }}</span>
+        </h2>
+        
+        <a href="{% url 'contractRegistry:index' %}" 
+           class="btn btn-outline-info fw-bold text-uppercase">
+            <i class="bi bi-arrow-left-circle me-2"></i> Volver a la Lista
+        </a>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-4"> 
+    
+    <div class="mb-4 welcome-card p-3 d-flex justify-content-between align-items-start">
+        <div style="text-align: justify;" class="me-5">
+            <p class="mb-1 text-text-dim">
+                <strong>Descripción:</strong> {{ contract.description }}
+            </p>
+            <p class="mb-0 text-text-dim">
+                <strong>Contrato ID Interno:</strong> <span class="fw-bold text-light">{{ contract.internal_id }}</span>
+            </p>
+        </div>
+        
+        <div class="text-end" style="min-width: 150px;">
+            <span class="text-text-dim d-block mb-0">Última Actualización:</span>
+            <span class="fw-bold text-status-ok">{{ contract.latest_update|date:"Y-m-d" }}</span>
+        </div>
+    </div>
+
+    <div class="card status-card-table p-3">
+        <ul class="nav nav-tabs" id="contractTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active text-accent" id="versions-tab" data-bs-toggle="tab" data-bs-target="#versions" type="button" role="tab" aria-controls="versions" aria-selected="true">
+                    <i class="bi bi-list-columns-reverse me-1"></i> Versiones
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-accent" id="deployments-tab" data-bs-toggle="tab" data-bs-target="#deployments" type="button" role="tab" aria-controls="deployments" aria-selected="false">
+                    <i class="bi bi-broadcast-pin me-1"></i> Despliegues Activos
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link text-accent" id="code-tab" data-bs-toggle="tab" data-bs-target="#code" type="button" role="tab" aria-controls="code" aria-selected="false">
+                    <i class="bi bi-code-slash me-1"></i> Bytecode & ABI
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content pt-3" id="contractTabsContent">
+            
+            <div class="tab-pane fade show active" id="versions" role="tabpanel" aria-labelledby="versions-tab">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-text-light mb-0">Historial de Versiones</h4>
+                    <a href="#" class="btn btn-outline-warning btn-sm fw-bold"> 
+                        <i class="bi bi-plus-circle-fill me-1"></i> Agregar Nueva Versión
+                    </a>
+                </div>
+
+                <p class="text-text-dim" style="text-align: justify;">Aquí se listan todas las versiones de este contrato base cargadas en la plataforma.</p>
+                
+                <table class="table table-dark table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th class="text-accent">Versión</th>
+                            <th scope="col" class="text-accent fw-bold">Hash de Archivo</th>
+                            <th class="text-accent">Fecha de Carga</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for version in contract.history %}
+                        <tr class="text-text-dim">
+                            <td class="fw-bold text-light">{{ version.version }}</td>
+                            <td>{{ version.hash_file }}</td>
+                            <td>{{ version.date_uploaded }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-pane fade" id="deployments" role="tabpanel" aria-labelledby="deployments-tab">
+                 <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="text-text-light mb-0">Direcciones Desplegadas</h4>
+                    <a href="#" class="btn btn-outline-info btn-sm fw-bold">
+                        <i class="bi bi-broadcast-pin me-1"></i> Desplegar Versión
+                    </a>
+                </div>
+
+                <p class="text-text-dim" style="text-align: justify;">Instancias de este contrato actualmente activas en diferentes redes.</p>
+                
+                <table class="table table-dark table-striped">
+                    <thead>
+                        <tr>
+                            <th class="text-accent">Red</th>
+                            <th class="text-accent">Dirección (Address)</th>
+                            <th class="text-accent">Versión</th>
+                            <th class="text-accent">Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                         {% for deployment in contract.deployments %}
+                        <tr class="text-text-dim">
+                            <td class="fw-bold text-light">{{ deployment.network }}</td>
+                            <td>{{ deployment.address }}</td>
+                            <td>{{ deployment.version }}</td>
+                            {% if deployment.status == 'Activo' %}
+                                <td class="text-success fw-bold">{{ deployment.status }}</td>
+                            {% else %}
+                                <td class="text-warning fw-bold">{{ deployment.status }}</td>
+                            {% endif %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="tab-pane fade" id="code" role="tabpanel" aria-labelledby="code-tab">
+                <h4 class="text-text-light mb-3">Bytecode & ABI</h4>
+                <p class="text-text-dim" style="text-align: justify;">Datos técnicos del contrato (necesarios para el despliegue).</p>
+                
+                <label class="text-accent mb-1">Bytecode ({{ contract.version.number }})</label>
+                <div class="bg-dark text-white border border-info p-2" 
+                     style="font-family: monospace; white-space: pre-wrap; word-break: break-all; border-radius: 5px; max-height: 200px; overflow-y: auto;">
+                    <pre class="text-white m-0 p-0" style="text-align: justify;">
+{{ contract.version.bytecode }}
+</pre>
+                </div>
+                
+                <label class="text-accent mt-3 mb-1">ABI (Application Binary Interface)</label>
+                <div class="bg-dark text-white border border-info p-2" 
+                     style="font-family: monospace; white-space: pre-wrap; word-break: break-all; border-radius: 5px; max-height: 250px; overflow-y: auto;">
+                    <pre class="text-white m-0 p-0" style="text-align: justify;">
+{{ contract.version.abi | pprint }}
+</pre>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
