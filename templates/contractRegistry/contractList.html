@@ -28,62 +28,56 @@
         </p>
     </div>
 
-    <div class="card status-card-table p-3" style="max-height: 400px; overflow-y: auto;">
-        <div class="table-responsive">
-            <table class="table table-dark table-striped table-hover mb-0"> 
-                <thead class="bg-dark sticky-top">
-                    <tr>
-                        <th scope="col" class="text-accent fw-bold">#</th>
-                        <th scope="col" class="text-accent fw-bold">Nombre del Contrato</th>
-                        <th scope="col" class="text-accent fw-bold">Última Versión Registrada</th>
-                        <th scope="col" class="text-accent fw-bold">Fecha de Registro</th>
-                        <th scope="col" class="text-accent fw-bold">Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr class="align-middle">
-                        <th scope="row">1</th>
-                        <td class="fw-bold text-light">HashPoolAdmin</td>
-                        <td class="text-text-dim text-status-ok">v2.1.3</td>
-                        <td class="text-text-dim">2024-08-15</td>
-                        <td>
-                            <a href="{% url 'contractRegistry:contract_detail' contract_id=1 %}" class="btn btn-sm btn-outline-info fw-bold">
-                                Ver
-                            </a>
-                        </td>
-                    </tr>
-                    <tr class="align-middle">
-                        <th scope="row">2</th>
-                        <td class="fw-bold text-light">TicketManager</td>
-                        <td class="text-text-dim">v1.0.0</td>
-                        <td class="text-text-dim">2024-09-01</td>
-                        <td>
-                            <a href="#" class="btn btn-sm btn-outline-info fw-bold">
-                                Ver
-                            </a>
-                        </td>
-                    </tr>
-                    <tr class="align-middle">
-                        <th scope="row">3</th>
-                        <td class="fw-bold text-light">HashPool</td>
-                        <td class="text-text-dim text-status-ok">v3.0.0</td>
-                        <td class="text-text-dim">2024-10-04</td>
-                        <td>
-                            <a href="#" class="btn btn-sm btn-outline-info fw-bold">
-                                Ver
-                            </a>
-                        </td>
-                    </tr>
-                    <tr class="align-middle"><th>4</th><td class="fw-bold text-light">LoanPool</td><td class="text-text-dim">v1.1.0</td><td class="text-text-dim">2024-10-01</td><td><a href="#" class="btn btn-sm btn-outline-info fw-bold">Ver</a></td></tr>
-                    <tr class="align-middle"><th>5</th><td class="fw-bold text-light">FeeCollector</td><td class="text-text-dim">v1.2.5</td><td class="text-text-dim">2024-09-25</td><td><a href="#" class="btn btn-sm btn-outline-info fw-bold">Ver</a></td></tr>
-                    <tr class="align-middle"><th>6</th><td class="fw-bold text-light">AssetToken</td><td class="text-text-dim">v0.9.0</td><td class="text-text-dim">2024-09-10</td><td><a href="#" class="btn btn-sm btn-outline-info fw-bold">Ver</a></td></tr>
-                    <tr class="align-middle"><th>7</th><td class="fw-bold text-light">RegistryIndex</td><td class="text-text-dim">v4.1.0</td><td class="text-text-dim">2024-08-01</td><td><a href="#" class="btn btn-sm btn-outline-info fw-bold">Ver</a></td></tr>
-                    <tr class="align-middle"><th>8</th><td class="fw-bold text-light">SwapRouter</td><td class="text-text-dim">v2.0.1</td><td class="text-text-dim">2024-07-20</td><td><a href="#" class="btn btn-sm btn-outline-info fw-bold">Ver</a></td></tr>
-                    <tr class="align-middle"><th>9</th><td class="fw-bold text-light">VestingLock</td><td class="text-text-dim">v1.5.0</td><td class="text-text-dim">2024-07-15</td><td><a href="#" class="btn btn-sm btn-outline-info fw-bold">Ver</a></td></tr>
-                </tbody>
-            </table>
+    {% if contracts %}
+        <div class="card status-card-table p-3" style="max-height: 500px; overflow-y: auto;">
+            <div class="table-responsive">
+                <table class="table table-dark table-striped table-hover mb-0"> 
+                    <thead class="bg-dark sticky-top">
+                        <tr>
+                            <th scope="col" class="text-accent fw-bold">#</th>
+                            <th scope="col" class="text-accent fw-bold">Nombre del Contrato</th>
+                            <th scope="col" class="text-accent fw-bold">Última Versión Registrada</th>
+                            <th scope="col" class="text-accent fw-bold">Fecha de Registro</th>
+                            <th scope="col" class="text-accent fw-bold">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contract in contracts %}
+                            <tr class="align-middle">
+                                <th scope="row">{{ forloop.counter }}</th>
+                                
+                                <td class="fw-bold text-light">{{ contract.name }}</td>
+                                
+                                <td class="text-text-dim">v1.0.0 (Estática)</td> 
+                                
+                                <td class="text-text-dim">{{ contract.created_at|date:"Y-m-d" }}</td>
+                                
+                                <td>
+                                    <a href="{% url 'contractRegistry:contract_detail' contract.pk %}" class="btn btn-sm btn-outline-info fw-bold">
+                                        Ver
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
-    </div>
+    
+    {% else %}
+        <div class="card p-5 text-center bg-dark mt-4 border border-warning">
+            <i class="bi bi-box-seam-fill text-warning" style="font-size: 3rem;"></i>
+            <h4 class="text-warning mt-3">¡No hay Contratos Base registrados!</h4>
+            <p class="text-text-dim mb-4">
+                Parece que esta lista está vacía. Para empezar a trabajar, debes registrar un nuevo tipo de contrato (ej. `ERC20`).
+            </p>
+            <a href="{% url 'contractRegistry:register_contract' %}" 
+               class="btn btn-warning fw-bold mx-auto" style="width: 250px;">
+                <i class="bi bi-folder-plus me-2"></i> Registrar Primer Contrato
+            </a>
+        </div>
+    {% endif %}
+
 </div>
 
 {% endblock %}

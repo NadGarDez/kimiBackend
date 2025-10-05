@@ -8,6 +8,23 @@ WIDGET_CLASSES = {
     'class': 'form-control bg-dark text-light border border-info'
 }
 
+
+class BaseContractForm(forms.ModelForm):
+    """Formulario para registrar un nuevo contrato base (lógico)."""
+    class Meta:
+        model = BaseContract
+        fields = ['name', 'descripcion']
+        
+        widgets = {
+            'name': forms.TextInput(attrs=WIDGET_CLASSES),
+            'descripcion': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Describe el propósito general y el estándar del contrato (ej. ERC-20, Contrato de Administración).',
+                **WIDGET_CLASSES 
+            }),
+        }
+
+
 class DeployForm(forms.Form):
     """Formulario para seleccionar el Contrato, Versión y Red antes del despliegue."""
     

@@ -13,7 +13,7 @@
             Registrar Contrato Base
         </h2>
         
-        <a href="{% url 'contractRegistry:index' %}" 
+        <a href="{% url 'contractRegistry:contract_list' %}" 
            class="btn btn-outline-info fw-bold text-uppercase">
             <i class="bi bi-arrow-left-circle me-2"></i> Volver a la Lista
         </a>
@@ -56,6 +56,31 @@
                 
                 <div id="nameHelp" class="form-text text-text-dim">
                     Debe ser único y descriptivo (máx. 100 caracteres).
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <!-- CAMBIO: Corregido de 'description' a 'descripcion' -->
+                <label for="{{ form.descripcion.id_for_label }}" class="form-label text-accent">
+                    Descripción <span class="text-text-dim">(opcional)</span>
+                </label>
+                
+                <textarea
+                    class="form-control bg-dark text-light border border-info"
+                    id="{{ form.descripcion.id_for_label }}"
+                    name="{{ form.descripcion.name }}"
+                    rows="3"
+                    maxlength="{{ form.descripcion.field.max_length }}"
+                    placeholder="Breve descripción del contrato base"
+                >{{ form.descripcion.value|default_if_none:'' }}</textarea>
+
+                <!-- CAMBIO: Corregido de 'description.errors' a 'descripcion.errors' -->
+                {% if form.descripcion.errors %}
+                    <div class="text-warning mt-1">{{ form.descripcion.errors }}</div>
+                {% endif %}
+
+                <div id="descriptionHelp" class="form-text text-text-dim">
+                    Puedes agregar detalles adicionales sobre el contrato.
                 </div>
             </div>
             

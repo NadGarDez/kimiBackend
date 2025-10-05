@@ -2,7 +2,9 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .staticData import STATIC_CONTRACT_DATA
 from django.shortcuts import redirect
-from .forms import DeployForm, NetworkForm
+from .forms import DeployForm, NetworkForm, BaseContractForm
+
+from .models import BaseContract, ContractVersion, DeployedContract
 
 # Create your views here.
 
@@ -10,7 +12,12 @@ def index(request):
     return contractList(request)
 
 def contractList(request):
-    return render(request, 'contractRegistry/contractList.html')
+    contracts = BaseContract.objects.all()
+    
+    context = {
+        'contracts': contracts
+    }
+    return render(request, 'contractRegistry/contractList.html', context)
 
 def contractDetail(request, contract_id):
     contract_data = STATIC_CONTRACT_DATA 
@@ -29,11 +36,21 @@ def deployedContractDetail(request, deployed_id):
 def registerContract(request):
     if request.method == "POST":
         contract_name = request.POST.get("name")
-        contract_id = 1 
+        print( "Contract Name:", contract_name )  # Debugging line
+        contract_description = request.POST.get("descripcion")
+        
+        new_contract = BaseContract(name=contract_name, descripcion=contract_description)
+        new_contract.save()
+        contract_id = new_contract.id
         
         return redirect('contractRegistry:contract_detail', contract_id=contract_id)
     
-    return render(request, 'contractRegistry/register_contract.html')
+    
+    form = BaseContractForm()
+    context = {
+        'form': form   
+    }
+    return render(request, 'contractRegistry/register_contract.html', context=context)
 
 def registerVersion(request, contract_id):
     if request.method == "POST":
