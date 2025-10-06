@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from .staticData import STATIC_CONTRACT_DATA
 from django.shortcuts import redirect
-from .forms import DeployForm, NetworkForm, BaseContractForm
+from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
 
 from .models import BaseContract, ContractVersion, DeployedContract
 
@@ -20,11 +20,20 @@ def contractList(request):
     return render(request, 'contractRegistry/contractList.html', context)
 
 def contractDetail(request, contract_id):
-    contract_data = STATIC_CONTRACT_DATA 
-
+    contract = BaseContract.objects.get(id=contract_id)
+    print(contract.pk, 'contract_id')
+    
+    versions = ContractVersion.objects.filter(base_contract=contract)
+    deployed_versions = DeployedContract.objects.filter(contract_version__in=versions)
+    contract_data = {
+        'instance': contract,
+        'versions': versions,
+        'deployed_versions': deployed_versions,
+    }
     context = {
         'contract': contract_data
     }
+    
     return render(request, 'contractRegistry/contractDetail.html', context)
 
 def versionDetail(request, contract_id, version_id):
@@ -52,18 +61,30 @@ def registerContract(request):
     }
     return render(request, 'contractRegistry/register_contract.html', context=context)
 
-def registerVersion(request, contract_id):
-    if request.method == "POST":
-        version_name = request.POST.get("version_name")
-        version_id = 1
+def registerVersion(request, contract_id): 
+    try:
+        base_contract = BaseContract.objects.get(id=contract_id)
+    except BaseContract.DoesNotExist:
+        from django.shortcuts import get_object_or_404
+        base_contract = get_object_or_404(BaseContract, pk=contract_id)
 
-        return redirect('contractRegistry:contract_detail', contract_id=contract_id)
-    contract_data = STATIC_CONTRACT_DATA
+    if request.method == "POST":
+        form = ContractVersionForm(request.POST)
+
+        if form.is_valid():
+            new_version = form.save(commit=False)
+            new_version.base_contract = base_contract
+            new_version.save()
+            return redirect('contractRegistry:contract_detail', contract_id=contract_id)
+    else:
+        form = ContractVersionForm(initial={'base_contract': contract_id})
+    
     context = {
-        'contract_id': contract_id,
-        'contract': contract_data
+        'contract': base_contract,
+        'form': form
     }
     return render(request, 'contractRegistry/register_version.html', context)
+
 
 def deployContract(request):
     deploy_form = DeployForm()

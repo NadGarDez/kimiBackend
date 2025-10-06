@@ -8,6 +8,37 @@ WIDGET_CLASSES = {
     'class': 'form-control bg-dark text-light border border-info'
 }
 
+class ContractVersionForm(forms.ModelForm):
+    """Formulario para registrar una nueva versión de un contrato base."""
+    class Meta:
+        model = ContractVersion
+        fields = ['base_contract', 'version', 'bytecode', 'abi', 'constructor_args_info']
+        
+        widgets = {
+            'version': forms.TextInput(attrs=WIDGET_CLASSES),
+            
+            'bytecode': forms.Textarea(attrs={**WIDGET_CLASSES, 'rows': 6}),
+            
+            'abi': forms.Textarea(attrs={**WIDGET_CLASSES, 'rows': 8}),
+            
+            'constructor_args_info': forms.Textarea(attrs={**WIDGET_CLASSES, 'rows': 4}),
+        }
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        for field in self.fields.values():
+            current_classes = field.widget.attrs.get('class', '')
+            field.widget.attrs['class'] = current_classes.replace('border-info', 'border-success')
+        
+        if 'initial' in kwargs and 'base_contract' in kwargs['initial']:
+            self.fields['base_contract'].widget = forms.HiddenInput()
+        elif 'data' in kwargs and kwargs['data'].get('base_contract'):
+            self.fields['base_contract'].widget = forms.HiddenInput()
+        
+        self.fields['abi'].widget.attrs['placeholder'] = '[{"type": "constructor", "inputs": []}, ...]'
+        self.fields['constructor_args_info'].widget.attrs['placeholder'] = '[{"name": "tokenAddress", "type": "address"}, ...]'
+
 
 class BaseContractForm(forms.ModelForm):
     """Formulario para registrar un nuevo contrato base (lógico)."""
