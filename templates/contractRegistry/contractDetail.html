@@ -60,7 +60,7 @@
             <thead>
               <tr>
                 <th class="text-accent">Versión</th>
-                <th scope="col" class="text-accent fw-bold">Hash de Archivo</th>
+                <th scope="col" class="text-accent fw-bold">Contrato Base</th>
                 <th class="text-accent">Fecha de Carga</th>
                 <th class="text-accent">Acciones</th>
               </tr>
@@ -69,7 +69,7 @@
               {% for version in contract.versions %}
                 <tr class="text-text-dim align-middle">
                   <td class="fw-bold text-light">{{ version.version }}</td>
-                    <td>{{ version.file_hash|default:"-" }}</td>
+                  <td class="fw-bold text-light">{{ version.base_contract.name }}</td>
                   <td>{{ version.created_at|date:"Y-m-d H:i" }}</td>
                   <td>
                     <a href="#" class="btn btn-sm btn-outline-success">
@@ -107,7 +107,6 @@
               </tr>
             </thead>
             <tbody>
-              <!-- ACCESO CORREGIDO: Iterando sobre contract.deployed_versions -->
               {% for deployment in contract.deployed_versions %}
                 <tr class="text-text-dim">
                   <td class="fw-bold text-light">{{ deployment.network.name }}</td>

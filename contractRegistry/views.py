@@ -1,9 +1,6 @@
-from django.shortcuts import render
-from django.http import HttpResponse
-from .staticData import STATIC_CONTRACT_DATA
-from django.shortcuts import redirect
+from django.shortcuts import render, redirect
+from django.http import HttpResponse, HttpResponseRedirect
 from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
-
 from .models import BaseContract, ContractVersion, DeployedContract
 
 # Create your views here.
@@ -101,3 +98,17 @@ def deployContract(request):
     }
     
     return render(request, 'contractRegistry/deploy_version.html', context)
+
+
+def registerNetwork(request):
+    if request.method == "POST":
+        form = NetworkForm(request.POST)
+        if form.is_valid():
+            network = form.save()
+            return redirect('contractRegistry:deploy_contract')
+    else:
+        form = NetworkForm()
+    context = {
+        'form': form
+    }
+    return render(request, 'contractRegistry/register_network.html', context)

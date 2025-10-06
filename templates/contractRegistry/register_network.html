@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Registrar Nueva Red{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content py-4" style="max-width: 600px;">
+    
+    <!-- Encabezado y Botón Volver -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
+            Registrar Nueva Red Blockchain
+        </h2>
+        
+        <!-- CAMBIO: Ahora usa JavaScript para volver al historial -->
+        <button onclick="window.history.back()" 
+           class="btn btn-outline-info fw-bold text-uppercase">
+            <i class="bi bi-arrow-left-circle me-2"></i> Volver
+        </button>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-4"> 
+
+    <div class="card status-card-table p-4 border-info">
+        <p class="mb-4 text-text-dim">
+            Ingrese los detalles técnicos de la nueva red para poder usarla como destino de despliegue.
+        </p>
+
+        <!-- Formulario de Registro de Red -->
+        <form method="post">
+            {% csrf_token %}
+            
+            <!-- Errores generales del formulario (si existen) -->
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Campo: Nombre -->
+            <div class="mb-3">
+                <label for="{{ form.name.id_for_label }}" class="form-label text-accent">
+                    Nombre de la Red
+                </label>
+                {{ form.name }}
+                <div class="form-text text-text-dim">Nombre corto y descriptivo (ej. "Sepolia Testnet").</div>
+                {% if form.name.errors %}
+                    <div class="text-warning mt-1">{{ form.name.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Campo: RPC URL -->
+            <div class="mb-3">
+                <label for="{{ form.rpc_url.id_for_label }}" class="form-label text-accent">
+                    URL RPC
+                </label>
+                {{ form.rpc_url }}
+                <div class="form-text text-text-dim">Endpoint HTTP o WebSocket para interactuar con la red.</div>
+                {% if form.rpc_url.errors %}
+                    <div class="text-warning mt-1">{{ form.rpc_url.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Campo: Chain ID -->
+            <div class="mb-4">
+                <label for="{{ form.chain_id.id_for_label }}" class="form-label text-accent">
+                    Chain ID
+                </label>
+                {{ form.chain_id }}
+                <div class="form-text text-text-dim">Identificador numérico único de la cadena.</div>
+                {% if form.chain_id.errors %}
+                    <div class="text-warning mt-1">{{ form.chain_id.errors }}</div>
+                {% endif %}
+            </div>
+
+            <!-- Botón de Guardar -->
+            <div class="d-grid">
+                <button type="submit" class="btn btn-info fw-bold text-uppercase">
+                    <i class="bi bi-save me-2"></i> Guardar Red
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

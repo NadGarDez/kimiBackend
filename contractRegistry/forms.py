@@ -105,4 +105,4 @@ class NetworkForm(forms.ModelForm):
         # Añade la clase border-warning específica para este formulario
         for field in self.fields.values():
             current_classes = field.widget.attrs.get('class', '')
-            field.widget.attrs['class'] = current_classes + ' border-warning'
+            field.widget.attrs['class'] = current_classes
