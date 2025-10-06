@@ -8,7 +8,7 @@ import string
 # Create your views here.
 
 def index(request):
-    return contractList(request)
+    return render(request, 'contractRegistry/index.html')
 
 def contractList(request):
     contracts = BaseContract.objects.all()

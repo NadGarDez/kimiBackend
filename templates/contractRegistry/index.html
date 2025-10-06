@@ -1,5 +1,114 @@
 {% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Dashboard de Contratos{% endblock %}
 
 {% block content %}
-    <h1>{{ request.path }}</h1>
+
+<div class="centered-container mx-auto dashboard-content">
+    
+    <!-- Sección de Bienvenida/Descripción del Módulo -->
+    <div class="welcome-card animate-welcome">
+        <h2 class="h3 text-accent mb-2">📦 Gestión de Artefactos y Despliegues Blockchain</h2>
+        <p class="mb-0 text-text-dim">
+            Este módulo centraliza la gestión del ciclo de vida de los Smart Contracts. 
+            Aquí puedes registrar contratos base, cargar sus versiones inmutables (Bytecode/ABI) y 
+            administrar sus despliegues activos en diferentes redes.
+        </p>
+    </div>
+
+    <h3 class="text-text-light mb-4 mt-4">Navegación Rápida y Componentes</h3>
+
+    <div class="row row-cols-1 row-cols-md-4 g-4">
+        
+        <!-- Tarjeta 1: Contratos Base (Lista Principal) -->
+        <div class="col">
+            <a href="{% url 'contractRegistry:contract_list' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status h-100">
+                    <div class="status-header">
+                        <i class="bi bi-list-task me-1"></i> <span class="fw-bold">Contratos Base</span>
+                    </div>
+                    <div class="status-body p-3">
+                        <p class="status-value text-accent mb-2">
+                            <i class="bi bi-file-earmark-code"></i>
+                        </p>
+                        <small class="text-text-dim d-block mb-2">Nombres lógicos y raíz de cada contrato.</small>
+                        <p class="small text-status-ok mt-2 mb-0 d-block">Ver todos los contratos registrados.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Tarjeta 2: Versiones (Para Cargar Artefactos) -->
+        <div class="col">
+            <!-- No hay una vista 'versiones' general, se enlaza a la lista de contratos donde se gestionan -->
+            <a href="{% url 'contractRegistry:contract_list' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.2s;">
+                    <div class="status-header">
+                        <i class="bi bi-tag me-1"></i> <span class="fw-bold">Versiones (Bytecode/ABI)</span>
+                    </div>
+                    <div class="status-body p-3">
+                        <p class="status-value mb-2">
+                            <i class="bi bi-patch-check"></i>
+                        </p>
+                        <small class="text-text-dim d-block mb-2">Archivos inmutables listos para despliegue.</small>
+                        <p class="small text-text-dim mt-2 mb-0 d-block">Gestión por contrato base.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Tarjeta 3: Deployed Contracts (Despliegues Activos) -->
+        <div class="col">
+            <!-- Asumiendo una vista futura para listar todos los despliegues -->
+            <a href="{% url 'contractRegistry:deploy_contract' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.4s;">
+                    <div class="status-header">
+                        <i class="bi bi-broadcast-pin me-1"></i> <span class="fw-bold">Despliegues (Deployed)</span>
+                    </div>
+                    <div class="status-body p-3">
+                        <p class="status-value text-accent mb-2">
+                            <i class="bi bi-rocket-takeoff"></i>
+                        </p>
+                        <small class="text-text-dim d-block mb-2">Administrar el proceso de despliegue y rastreo.</small>
+                        <p class="small text-status-ok mt-2 mb-0 d-block">Iniciar despliegue o ver activos.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        
+        <!-- Tarjeta 4: Networks (Redes Blockchain) -->
+        <div class="col">
+            <!-- Asumiendo una vista futura para listar todas las redes registradas -->
+            <a href="{% url 'contractRegistry:register_network' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.6s;">
+                    <div class="status-header">
+                        <i class="bi bi-cloud-haze2 me-1"></i> <span class="fw-bold">Networks (Redes)</span>
+                    </div>
+                    <div class="status-body p-3">
+                        <p class="status-value mb-2">
+                            <i class="bi bi-globe-americas"></i>
+                        </p>
+                        <small class="text-text-dim d-block mb-2">Gestión de RPC URLs y Chain IDs.</small>
+                        <p class="small text-status-ok mt-2 mb-0 d-block">Añadir o configurar redes.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Sección de Tareas Recientes y Logs (Estático por ahora) -->
+    <div class="mt-5">
+        <h4 class="text-text-light">Estado del Sistema Registry</h4>
+        <div class="p-3 text-text-dim tasks-log bg-dark" style="border-radius: 5px;">
+            <ul class="list-unstyled mb-0 small">
+                <li><span class="text-success">✅</span> 3 Contratos listos para Despliegue.</li>
+                <li><span class="text-warning">⚠️</span> Network Ropsten marcada como Obsoleta.</li>
+                <li><span class="text-success">✅</span> Versión v3.0.0 de HashPool Verificada (1h ago).</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}
