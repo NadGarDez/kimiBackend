@@ -12,5 +12,7 @@ urlpatterns = [
     path('version/register/<int:contract_id>/', views.registerVersion, name='register_version'),
     path('deployed/<int:deployed_id>/', views.deployedContractDetail, name='deployed_contract_detail'),
     path('deploy/', views.deployContract, name='deploy_contract'),
+    path('deploy/from/version/<int:version_id>/', views.deployContractFromVersion, name='deploy_contract_from_version'),
     path('network/register/', views.registerNetwork, name='register_network'),
+
 ]

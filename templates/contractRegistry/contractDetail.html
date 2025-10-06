@@ -72,7 +72,7 @@
                   <td class="fw-bold text-light">{{ version.base_contract.name }}</td>
                   <td>{{ version.created_at|date:"Y-m-d H:i" }}</td>
                   <td>
-                    <a href="#" class="btn btn-sm btn-outline-success">
+                    <a href="{% url 'contractRegistry:deploy_contract_from_version' version_id=version.pk %}" class="btn btn-sm btn-outline-success">
                       <i class="bi bi-arrow-up-right-square"></i> Usar/Desplegar
                     </a>
                   </td>
@@ -111,7 +111,7 @@
                 <tr class="text-text-dim">
                   <td class="fw-bold text-light">{{ deployment.network.name }}</td>
                   <td>{{ deployment.address|truncatechars:42 }}</td>
-                  <td>{{ deployment.contract_version.version_number }}</td>
+                  <td>{{ deployment.contract_version.version }}</td>
                   {% if deployment.is_current %}
                     <td class="text-success fw-bold">ACTIVO (Actual)</td>
                   {% else %}

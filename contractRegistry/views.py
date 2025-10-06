@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
 from .models import BaseContract, ContractVersion, DeployedContract
+import random
+import string
 
 # Create your views here.
 
@@ -63,6 +65,7 @@ def registerVersion(request, contract_id):
         base_contract = BaseContract.objects.get(id=contract_id)
     except BaseContract.DoesNotExist:
         from django.shortcuts import get_object_or_404
+
         base_contract = get_object_or_404(BaseContract, pk=contract_id)
 
     if request.method == "POST":
@@ -90,6 +93,26 @@ def registerVersion(request, contract_id):
 def deployContract(request):
     deploy_form = DeployForm()
     add_network_form = NetworkForm()
+    
+    if request.method == "POST":
+        deploy_form = DeployForm(request.POST)
+        add_network_form = NetworkForm()  
+        if deploy_form.is_valid():
+            deployed_contract = DeployedContract()
+            
+            deployed_contract.contract_version = deploy_form.cleaned_data['version']
+            deployed_contract.network = deploy_form.cleaned_data['network']
+            deployed_contract.base_contract = deployed_contract.contract_version.base_contract
+            address = "0x" + ''.join(random.choices('0123456789abcdef', k=40))
+            gas_used = random.randint(100000, 500000)
+
+            deployed_contract.address = address
+            deployed_contract.gas_used = gas_used
+            deployed_contract.is_current = True
+            deployed_contract.save()
+            return redirect('contractRegistry:contract_detail', contract_id=deployed_contract.contract_version.base_contract.id)
+        else:
+            print(deploy_form.errors)
 
     context = {
         'deploy_form': deploy_form,
@@ -112,3 +135,37 @@ def registerNetwork(request):
         'form': form
     }
     return render(request, 'contractRegistry/register_network.html', context)
+
+
+
+def deployContractFromVersion(request, version_id):
+    try:
+        contract_version = ContractVersion.objects.get(id=version_id)
+    except ContractVersion.DoesNotExist:
+        return HttpResponse("Contract Version not found.", status=404)
+    
+    if request.method == "POST":
+        form = DeployForm(request.POST)
+        if form.is_valid():
+            deployed_contract = DeployedContract()
+            deployed_contract.contract_version = contract_version
+            deployed_contract.network = form.cleaned_data['network']
+            deployed_contract.base_contract = contract_version.base_contract
+            
+            address = "0x" + ''.join(random.choices('0123456789abcdef', k=40))
+            gas_used = random.randint(100000, 500000)
+
+            deployed_contract.address = address
+            deployed_contract.gas_used = gas_used
+            deployed_contract.is_current = True
+            deployed_contract.save()
+            
+            return redirect('contractRegistry:contract_detail', contract_id=contract_version.base_contract.id)
+    else:
+        form = DeployForm(initial={'version': contract_version.id, 'base_contract': contract_version.base_contract.id})
+    
+    context = {
+        'contract_version': contract_version,
+        'deploy_form': form,
+    }
+    return render(request, 'contractRegistry/deploy_version.html', context)
