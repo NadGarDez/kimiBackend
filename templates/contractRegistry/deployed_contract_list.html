@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Despliegues Activos{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content">
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+      <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">Lista de Contratos Desplegados</h2>
+
+      <a href="{% url 'contractRegistry:deploy_contract' %}" class="btn btn-warning fw-bold text-uppercase me-3"><i class="bi bi-rocket-takeoff me-2"></i> Desplegar</a>
+      <a href="{% url 'contractRegistry:index' %}" class="btn btn-outline-info fw-bold text-uppercase"><i class="bi bi-arrow-left-circle me-2"></i> Volver al Dashboard</a>
+    </div>
+
+    <hr class="text-accent mt-0 mb-4" />
+
+    <div class="mb-4 welcome-card p-3 d-flex justify-content-between align-items-start">
+      <div style="text-align: justify;">
+        <p class="mb-0 text-text-dim">
+          Este listado rastrea todas las instancias activas de contratos en las diferentes redes blockchain registradas.
+        </p>
+      </div>
+    </div>
+    
+    <div class="card status-card-table p-3">
+        <h4 class="text-text-light mb-3">Instancias Activas</h4>
+
+        <table class="table table-dark table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col" class="text-accent">Contrato Base</th>
+                    <th scope="col" class="text-accent">Versión</th>
+                    <th scope="col" class="text-accent">Red</th>
+                    <th scope="col" class="text-accent">Dirección (Address)</th>
+                    <th scope="col" class="text-accent">Desplegado el</th>
+                    <th scope="col" class="text-accent">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for deployment in deployed_contracts %}
+                    <tr class="text-text-dim align-middle">
+                        <td class="fw-bold text-light">{{ deployment.contract_version.base_contract.name }}</td>
+                        <td>{{ deployment.contract_version.version }}</td>
+                        <td class="fw-bold text-info">{{ deployment.network.name }}</td>
+                        <td>
+                            <span class="d-inline-block text-truncate" style="max-width: 150px;">{{ deployment.address }}</span>
+                        </td>
+                        <td>{{ deployment.deployed_at|date:'Y-m-d' }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning me-2" disabled>
+                                <i class="bi bi-plug"></i> Interactuar
+                            </button>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr class="text-center">
+                        <td colspan="6" class="text-warning fw-bold">No hay contratos desplegados activos registrados aún.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

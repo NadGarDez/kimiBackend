@@ -42,7 +42,7 @@
         <!-- Tarjeta 2: Versiones (Para Cargar Artefactos) -->
         <div class="col">
             <!-- No hay una vista 'versiones' general, se enlaza a la lista de contratos donde se gestionan -->
-            <a href="{% url 'contractRegistry:contract_list' %}" class="text-decoration-none">
+            <a href="{% url 'contractRegistry:version_list' %}" class="text-decoration-none">
                 <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.2s;">
                     <div class="status-header">
                         <i class="bi bi-tag me-1"></i> <span class="fw-bold">Versiones (Bytecode/ABI)</span>
@@ -61,7 +61,7 @@
         <!-- Tarjeta 3: Deployed Contracts (Despliegues Activos) -->
         <div class="col">
             <!-- Asumiendo una vista futura para listar todos los despliegues -->
-            <a href="{% url 'contractRegistry:deploy_contract' %}" class="text-decoration-none">
+            <a href="{% url 'contractRegistry:deployed_contract_list' %}" class="text-decoration-none">
                 <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.4s;">
                     <div class="status-header">
                         <i class="bi bi-broadcast-pin me-1"></i> <span class="fw-bold">Despliegues (Deployed)</span>
@@ -80,7 +80,7 @@
         <!-- Tarjeta 4: Networks (Redes Blockchain) -->
         <div class="col">
             <!-- Asumiendo una vista futura para listar todas las redes registradas -->
-            <a href="{% url 'contractRegistry:register_network' %}" class="text-decoration-none">
+            <a href="{% url 'contractRegistry:network_list' %}" class="text-decoration-none">
                 <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.6s;">
                     <div class="status-header">
                         <i class="bi bi-cloud-haze2 me-1"></i> <span class="fw-bold">Networks (Redes)</span>

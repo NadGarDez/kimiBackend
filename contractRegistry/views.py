@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, HttpResponseRedirect
 from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
-from .models import BaseContract, ContractVersion, DeployedContract
+from .models import BaseContract, ContractVersion, DeployedContract, Network
 import random
 import string
 
@@ -169,3 +169,27 @@ def deployContractFromVersion(request, version_id):
         'deploy_form': form,
     }
     return render(request, 'contractRegistry/deploy_version.html', context)
+
+def versionList(request):
+    
+    versions = ContractVersion.objects.all()
+    context = {
+        'versions': versions
+    }
+    return render(request, 'contractRegistry/version_list.html', context)
+
+
+def deployedContractList(request):
+    deployed_contracts = DeployedContract.objects.all()
+    context = {
+        'deployed_contracts': deployed_contracts
+    }
+    return render(request, 'contractRegistry/deployed_contract_list.html', context)
+
+
+def networkList(request):
+    all_networks = Network.objects.all()
+    context = {
+        'networks': all_networks
+    }
+    return render(request, 'contractRegistry/network_list.html', context)
