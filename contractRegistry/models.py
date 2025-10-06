@@ -32,6 +32,7 @@ class ContractVersion(models.Model):
         default=list, 
         help_text="Lista de nombres y tipos de argumentos del constructor para validación."
     )
+    created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
         constraints = [

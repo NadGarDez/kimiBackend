@@ -33,6 +33,21 @@
         
         <form method="post">
             {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="{{ form.base_contract.id_for_label }}" class="form-label text-accent">
+                    Contrato Base
+                </label>
+                <input
+                    type="text"
+                    class="form-control bg-dark text-light border border-info"
+                    id="{{ form.base_contract.id_for_label }}"
+                    name="{{ form.base_contract.name }}"
+                    value="{{ form.base_contract.value|default:'' }}"
+                    readonly
+                >
+                <div class="form-text text-text-dim">ID del contrato base asociado a esta versión.</div>
+            </div>
             
             <div class="mb-3">
                 <label for="{{ form.version.id_for_label }}" class="form-label text-accent">

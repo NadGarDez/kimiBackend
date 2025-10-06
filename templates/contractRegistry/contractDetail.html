@@ -68,9 +68,9 @@
             <tbody>
               {% for version in contract.versions %}
                 <tr class="text-text-dim align-middle">
-                  <td class="fw-bold text-light">{{ version.version_number }}</td>
-                  <td>{{ version.file_hash|truncatechars:25 }}</td>
-                  <td>{{ version.uploaded_at|date:"Y-m-d H:i" }}</td>
+                  <td class="fw-bold text-light">{{ version.version }}</td>
+                    <td>{{ version.file_hash|default:"-" }}</td>
+                  <td>{{ version.created_at|date:"Y-m-d H:i" }}</td>
                   <td>
                     <a href="#" class="btn btn-sm btn-outline-success">
                       <i class="bi bi-arrow-up-right-square"></i> Usar/Desplegar

@@ -70,12 +70,16 @@ def registerVersion(request, contract_id):
 
     if request.method == "POST":
         form = ContractVersionForm(request.POST)
-
+        print('Form data:', request.POST)  # Debugging line
         if form.is_valid():
+            print("Form is valid")
             new_version = form.save(commit=False)
             new_version.base_contract = base_contract
             new_version.save()
             return redirect('contractRegistry:contract_detail', contract_id=contract_id)
+        else:
+            print("Form is not valid")
+            print(form.errors)
     else:
         form = ContractVersionForm(initial={'base_contract': contract_id})
     
