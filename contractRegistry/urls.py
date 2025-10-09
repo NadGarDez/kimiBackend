@@ -17,4 +17,5 @@ urlpatterns = [
     path('deployed/list/', views.deployedContractList, name='deployed_contract_list'),
     path('network/register/', views.registerNetwork, name='register_network'),
     path('network/list/', views.networkList, name='network_list'),
+    path('api/version_args/<int:version_id>/', views.get_version_args, name='get_version_args'),
 ]

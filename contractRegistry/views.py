@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, JsonResponse
 from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
 from .models import BaseContract, ContractVersion, DeployedContract, Network
 import random
@@ -193,3 +193,14 @@ def networkList(request):
         'networks': all_networks
     }
     return render(request, 'contractRegistry/network_list.html', context)
+
+
+def get_version_args(request, version_id):
+    try:
+        version = ContractVersion.objects.get(pk=version_id)
+        args = version.constructor_args_info 
+        return JsonResponse({'args': args})
+    except ContractVersion.DoesNotExist:
+        return JsonResponse({'args': []}, status=404)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

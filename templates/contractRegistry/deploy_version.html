@@ -7,12 +7,11 @@
 
 <div class="centered-container mx-auto dashboard-content py-4" style="max-width: 900px;">
     
+    <!-- Header y Título -->
     <div class="d-flex justify-content-between align-items-center mb-4 border-0">
-        
         <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
             Desplegar Contrato a la Red
         </h2>
-        
         <a href="{% url 'contractRegistry:index' %}" 
            class="btn btn-outline-info fw-bold text-uppercase">
             <i class="bi bi-arrow-left-circle me-2"></i> Volver a la Lista
@@ -27,14 +26,17 @@
         </p>
     </div>
 
+    <!-- SECCIÓN 1: SELECCIÓN DE PARÁMETROS DE DESPLIEGUE -->
     <div class="card status-card-table p-4 mb-4">
         
         <h4 class="text-text-light mb-4">Selección de Artefactos y Red</h4>
         
+        <!-- Formulario principal que se enviará al final -->
         <form id="deployment-form" method="post">
             {% csrf_token %}
             
             <div class="row">
+                <!-- Select 1: Contrato Base -->
                 <div class="col-md-6 mb-3">
                     <label for="{{ deploy_form.base_contract.id_for_label }}" class="form-label text-accent">
                         Contrato Base
@@ -46,6 +48,7 @@
                     {% endif %}
                 </div>
 
+                <!-- Select 2: Versión -->
                 <div class="col-md-6 mb-3">
                     <label for="{{ deploy_form.version.id_for_label }}" class="form-label text-accent">
                         Versión Registrada
@@ -58,6 +61,7 @@
                 </div>
             </div>
 
+            <!-- Select 3: Red (Network) y Botón de Añadir -->
             <div class="mb-4">
                 <label for="{{ deploy_form.network.id_for_label }}" class="form-label text-accent">
                     Red de Destino
@@ -66,8 +70,8 @@
                     {{ deploy_form.network }}
                     
                     <a href="{% url 'contractRegistry:register_network' %}"
-                       class="btn btn-warning fw-bold text-uppercase">
-                        <i class="bi bi-plus-lg me-1"></i> Añadir Red
+                       class="btn btn-warning fw-bold text-uppercase" target="_blank">
+                        <i class="bi bi-plus-lg me-1"></i> Añadir Red (Abrir en nueva pestaña)
                     </a>
                 </div>
                 <div class="form-text text-text-dim">Red blockchain donde se ejecutará el despliegue.</div>
@@ -76,10 +80,13 @@
                     <div class="text-warning mt-1">{{ deploy_form.network.errors }}</div>
                 {% endif %}
             </div>
+            
+            <!-- NOTA: Los campos dinámicos se inyectarán en la sección de abajo pero serán parte de este form -->
         </form>
     </div>
     
 
+    <!-- SECCIÓN 3: ARGUMENTOS DEL CONSTRUCTOR (Dinámico) -->
     <div id="constructor-args-container" class="card status-card-table p-4 border-info">
         <h4 class="text-text-light mb-4">Argumentos del Constructor (<span id="arg-count">0</span> Requeridos)</h4>
         
@@ -87,15 +94,140 @@
             Selecciona el contrato y la versión para ver los argumentos requeridos.
         </p>
         
-        <div id="dynamic-args">
+        <div id="dynamic-args" form="deployment-form">
+            <!-- Los campos del constructor se inyectarán aquí -->
         </div>
         
+        <!-- Botón de Despliegue Final -->
         <div class="d-grid mt-4">
-            <button type="submit" form="deployment-form" class="btn btn-info fw-bold text-uppercase">
+            <button type="submit" form="deployment-form" id="deploy-button" class="btn btn-info fw-bold text-uppercase" disabled>
                 <i class="bi bi-rocket-takeoff me-2"></i> Iniciar Despliegue
             </button>
         </div>
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('hey jud')
+        const versionSelect = document.getElementById('{{ deploy_form.version.id_for_label }}');
+        const argsContainer = document.getElementById('dynamic-args');
+        const argCountSpan = document.getElementById('arg-count');
+        const argsMessage = document.getElementById('args-message');
+        const deployButton = document.getElementById('deploy-button');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const formElement = document.getElementById('deployment-form');
+
+        // Función para renderizar un campo de formulario basado en el argumento
+        function renderArgInput(arg, index) {
+            const container = document.createElement('div');
+            container.className = 'mb-3';
+
+            const label = document.createElement('label');
+            label.className = 'form-label text-accent d-block';
+            label.innerHTML = `<strong>${arg.name}</strong> <span class="text-info">(${arg.type})</span>`;
+            
+            const input = document.createElement('input');
+            input.type = arg.type === 'bool' ? 'checkbox' : 'text'; // Usar checkbox para bool, text para otros (address, uint)
+            input.className = 'form-control bg-dark text-light border border-info';
+            input.name = `arg_${arg.name}`; // Prefijo para identificar los argumentos en el POST
+            input.placeholder = `Ingrese el valor para ${arg.name} (${arg.type})`;
+            input.required = true;
+
+            // Para checkbox, ajustamos la apariencia
+            if (arg.type === 'bool') {
+                input.className = 'form-check-input border border-info';
+                input.required = false;
+                const checkboxContainer = document.createElement('div');
+                checkboxContainer.className = 'form-check form-switch';
+                checkboxContainer.appendChild(input);
+                checkboxContainer.appendChild(label); // Mueve la etiqueta después del input para switch style
+                container.appendChild(checkboxContainer);
+            } else {
+                container.appendChild(label);
+                container.appendChild(input);
+            }
+
+            // Añadir campo oculto para el nombre y tipo (para que la vista sepa qué está validando)
+            const typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = `arg_type_${arg.name}`;
+            typeInput.value = arg.type;
+            
+            formElement.appendChild(typeInput);
+            argsContainer.appendChild(container);
+        }
+
+        // Función principal para obtener los argumentos vía AJAX
+        async function fetchConstructorArgs(versionId) {
+            argsContainer.innerHTML = '';
+            argsMessage.textContent = 'Cargando argumentos...';
+            argCountSpan.textContent = '...';
+            deployButton.disabled = true;
+
+            try {
+                // Necesitas definir esta URL en tu urls.py
+                const url = `/contractRegistry/api/version_args/${versionId}/`; 
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRFToken': csrfToken,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error al cargar la versión.');
+                }
+
+                const data = await response.json();
+                const args = data.args || []; 
+
+                if (args.length > 0) {
+                    argsMessage.textContent = 'A continuación, ingrese los valores requeridos para el constructor del contrato:';
+                    argCountSpan.textContent = args.length;
+                    
+                    args.forEach(renderArgInput);
+                    
+                } else {
+                    argsMessage.textContent = '¡Esta versión de contrato no requiere argumentos de constructor!';
+                    argCountSpan.textContent = '0';
+                }
+
+                deployButton.disabled = false; // Habilitar el botón si la carga fue exitosa
+
+            } catch (error) {
+                console.error('Error fetching constructor arguments:', error);
+                argsMessage.textContent = 'Error al cargar los argumentos. Asegúrese de que la versión contenga un ABI válido y que la API esté funcionando.';
+                argCountSpan.textContent = 'Error';
+                deployButton.disabled = true;
+            }
+        }
+
+        // Event Listener para el cambio de versión
+        versionSelect.addEventListener('change', function() {
+            const selectedVersionId = this.value;
+
+            // Limpiar campos ocultos de tipos de argumentos anteriores
+            document.querySelectorAll('input[name^="arg_type_"]').forEach(el => el.remove());
+
+            if (selectedVersionId) {
+                fetchConstructorArgs(selectedVersionId);
+            } else {
+                argsContainer.innerHTML = '';
+                argsMessage.textContent = 'Selecciona el contrato y la versión para ver los argumentos requeridos.';
+                argCountSpan.textContent = '0';
+                deployButton.disabled = true;
+            }
+        });
+        
+        // Ejecutar al cargar si ya hay una versión seleccionada (ej. después de un error de POST)
+        if (versionSelect.value) {
+            fetchConstructorArgs(versionSelect.value);
+        }
+    });
+</script>
 {% endblock %}
