@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Monederos Autorizados{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content">
+    
+    <div class="welcome-card animate-welcome">
+        <h2 class="h3 text-accent mb-2">🛡️ Control de Acceso para Despliegues Blockchain</h2>
+        <p class="mb-0 text-text-dim">
+            Este módulo es fundamental para la seguridad. Aquí se administran las direcciones EVM (ej., de MetaMask) que están **explícitamente autorizadas** para iniciar el despliegue de Smart Contracts a la red.
+        </p>
+    </div>
+
+    <h3 class="text-text-light mb-4 mt-4">Gestión de Direcciones Autorizadas</h3>
+
+    <div class="row row-cols-1 row-cols-md-4 g-4">
+        
+        <div class="col">
+            <a href="{% url 'system_address_manager:address_list' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status h-100">
+                    <div class="status-header">
+                        <i class="bi bi-list-task me-1"></i> <span class="fw-bold">Ver Direcciones Activas</span>
+                    </div>
+                    <div class="status-body p-3">
+                        <p class="status-value text-accent mb-2">
+                            <i class="bi bi-person-check"></i>
+                        </p>
+                        <small class="text-text-dim d-block mb-2">Lista completa de monederos permitidos.</small>
+                        <p class="small text-status-ok mt-2 mb-0 d-block">Revisar permisos de firma.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <a href="{% url 'system_address_manager:address_create' %}" class="text-decoration-none">
+                <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.2s;">
+                    <div class="status-header">
+                        <i class="bi bi-plus-circle me-1"></i> <span class="fw-bold">Añadir Nueva Dirección</span>
+                    </div>
+                    <div class="status-body p-3">
+                        <p class="status-value mb-2">
+                            <i class="bi bi-key"></i>
+                        </p>
+                        <small class="text-text-dim d-block mb-2">Registrar un nuevo monedero para despliegue.</small>
+                        <p class="small text-text-dim mt-2 mb-0 d-block">Máximo control de acceso.</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col">
+            <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.4s;">
+                <div class="status-header">
+                    <i class="bi bi-lock-fill me-1"></i> <span class="fw-bold">Monederos Inactivos</span>
+                </div>
+                <div class="status-body p-3">
+                    <p class="status-value text-warning mb-2">
+                        1
+                    </p>
+                    <small class="text-text-dim d-block mb-2">Direcciones revocadas que no pueden firmar.</small>
+                    <p class="small text-status-ok mt-2 mb-0 d-block">Mantener la lista limpia.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col">
+            <div class="card bg-dark text-white status-card animate-status h-100" style="animation-delay: 0.6s;">
+                <div class="status-header">
+                    <i class="bi bi-shield-exclamation me-1"></i> <span class="fw-bold">Reglas de Control</span>
+                </div>
+                <div class="status-body p-3">
+                    <p class="status-value text-success mb-2">
+                        <i class="bi bi-file-earmark-lock"></i>
+                    </p>
+                    <small class="text-text-dim d-block mb-2">Validación estricta del campo 'from' en la TX.</small>
+                    <p class="small text-status-ok mt-2 mb-0 d-block">Integración con Metamask OK.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mt-5">
+        <h4 class="text-text-light">Logs de Actividad Reciente</h4>
+        <div class="p-3 text-text-dim tasks-log bg-dark" style="border-radius: 5px;">
+            <ul class="list-unstyled mb-0 small">
+                <li><span class="text-success">✅</span> Dirección 0x81...4C Añadida (5m ago).</li>
+                <li><span class="text-danger">❌</span> Dirección 0xFA...6B Revocada por Expiración.</li>
+                <li><span class="text-warning">⚠️</span> Intento de uso de dirección no autorizada (10:15 AM).</li>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

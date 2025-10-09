@@ -23,5 +23,6 @@ urlpatterns = [
     path('tickets/', include('tickets.urls')),
     path('hashPool/', include('hashPool.urls')),
     path('contractRegistry/', include('contractRegistry.urls')),
+    path('address_manager/', include('system_address_manager.urls')),
     path('', projectIndex, name='project_index'),
 ]

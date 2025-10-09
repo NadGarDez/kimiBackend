@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import UniqueConstraint, Q
+from system_address_manager.models import AuthorizedAddress as DeployerAddress
 
 #======================================================================
 # 1. BaseContract
@@ -59,22 +60,56 @@ class Network(models.Model):
     
     def __str__(self):
         return f"{self.name} (Chain ID: {self.chain_id})"
+    
 
 # ----------------------------------------------------------------------
 # 4. DeployedContract
 # ----------------------------------------------------------------------
+
+class DeploymentStatus(models.TextChoices):
+    PENDING_PREPARATION = 'PENDING_PREP', 'Pendiente de Preparación' # (Opcional, se puede omitir si se crea en la vista)
+    PENDING_SIGNATURE = 'PENDING_SIGN', 'Esperando Firma del Usuario'
+    SENT_TO_NETWORK = 'SENT', 'Transacción Enviada a la Red'
+    CONFIRMED = 'CONFIRMED', 'Confirmado y Dirección Final'
+    FAILED = 'FAILED', 'Fallo en Despliegue'
+
 class DeployedContract(models.Model):
     """
     Registra una instancia de un contrato desplegado en una dirección y red específica. 
     Actúa como fuente de verdad para el contrato activo (Hotfix tracking).
     """
     contract_version = models.ForeignKey(ContractVersion, on_delete=models.PROTECT, related_name='deployments')
-    address = models.CharField(max_length=42)  
-    deployed_at = models.DateTimeField(auto_now_add=True)
     network = models.ForeignKey(Network, on_delete=models.PROTECT, related_name='deployed_contracts')
-    gas_used = models.BigIntegerField(null=True, blank=True)
     is_current = models.BooleanField(default=False) 
+    deployerAddress = models.ForeignKey(DeployerAddress, on_delete=models.PROTECT)
     base_contract = models.ForeignKey(BaseContract, on_delete=models.CASCADE, related_name='deployed_instances', editable=False, db_index=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    
+    status = models.CharField(
+        max_length=15, 
+        choices=DeploymentStatus.choices, 
+        default=DeploymentStatus.PENDING_SIGNATURE
+    )
+    transaction_hash = models.CharField(
+        max_length=66,
+        null=True, 
+        blank=True,
+        unique=True 
+    )
+    raw_tx_data = models.JSONField(
+        null=True, 
+        blank=True,
+        help_text="Datos de la transacción sin firmar, generados por web3.py."
+    )
+    
+    
+    
+    address = models.CharField(max_length=42, null=True, blank=True)  
+    gas_used = models.BigIntegerField(null=True, blank=True)
+    
+    
 
     class Meta:
         constraints = [

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'tickets.apps.TicketsConfig',
     'hashPool.apps.HashpoolConfig',
     'contractRegistry.apps.ContractregistryConfig',
+    'system_address_manager.apps.SystemAddressManagerConfig',
     'bootstrap5',
 ]
 

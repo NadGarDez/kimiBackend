@@ -130,12 +130,12 @@ def deployContract(request):
                 deployed_contract.network = deploy_form.cleaned_data['network']
                 deployed_contract.base_contract = deployed_contract.contract_version.base_contract
                 
-                address = "0x" + ''.join(random.choices('0123456789abcdef', k=40))
-                gas_used = random.randint(100000, 500000)
+                # address = "0x" + ''.join(random.choices('0123456789abcdef', k=40))
+                # gas_used = random.randint(100000, 500000)
 
-                deployed_contract.address = address
-                deployed_contract.gas_used = gas_used
-                deployed_contract.is_current = True
+                # deployed_contract.address = address
+                # deployed_contract.gas_used = gas_used
+                deployed_contract.is_current = False
                 
                 deployed_contract.save()
             
