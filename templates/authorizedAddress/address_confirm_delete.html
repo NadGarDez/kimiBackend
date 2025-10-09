@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Confirmar Eliminación{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content py-4" style="max-width: 600px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        <h2 class="h3 text-danger mb-0" style="border-bottom: none !important;">
+            <i class="bi bi-trash-fill me-2"></i> Confirmar Eliminación
+        </h2>
+        
+        <button onclick="window.history.back()" 
+           class="btn btn-outline-info fw-bold text-uppercase">
+            <i class="bi bi-arrow-left-circle me-2"></i> Cancelar
+        </button>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-4"> 
+
+    <div class="card status-card-table p-4 border-danger">
+        
+        <p class="lead text-warning fw-bold">
+            ¡Advertencia! Estás a punto de eliminar la siguiente dirección autorizada:
+        </p>
+
+        <div class="p-3 mb-4 bg-dark rounded border border-warning">
+            <dl class="row mb-0">
+                <dt class="col-sm-4 text-text-light">Dirección EVM:</dt>
+                <dd class="col-sm-8 font-monospace text-danger text-wrap fs-6">{{ address.address }}</dd>
+
+                <dt class="col-sm-4 text-text-light">Descripción:</dt>
+                <dd class="col-sm-8 text-text-dim">{{ address.description|default:"— Sin descripción —" }}</dd>
+            </dl>
+        </div>
+
+        <p class="text-text-light mb-4">
+            <strong>Esta acción es irreversible.</strong> Una vez eliminada, esta dirección ya no podrá ser utilizada para firmar ni desplegar nuevos contratos.
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-danger fw-bold text-uppercase">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> Sí, Eliminar Permanentemente
+                </button>
+            </div>
+        </form>
+    </div>
+    
+</div>
+
+{% endblock %}

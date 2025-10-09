@@ -66,7 +66,7 @@ class AuthorizedAddressCreateView(CreateView):
     form_class = AuthorizedAddressForm
     template_name = 'authorizedAddress/address_form.html'
     # Redirigir a la lista después de crear
-    success_url = reverse_lazy('contractRegistry:address_list') 
+    success_url = reverse_lazy('system_address_manager:address_list') 
     
     def form_valid(self, form):
         # Opcional: Convertir la dirección a minúsculas antes de guardar
@@ -86,7 +86,7 @@ class AuthorizedAddressUpdateView(UpdateView):
     # Redirigir a los detalles de la dirección después de actualizar
     # Usamos f-string y lazy para resolver la URL con el pk de la instancia
     def get_success_url(self):
-        return reverse_lazy('contractRegistry:address_detail', kwargs={'pk': self.object.pk})
+        return reverse_lazy('system_address_manager:address_detail', kwargs={'pk': self.object.pk})
         
 
 # ====================================================================
@@ -98,4 +98,4 @@ class AuthorizedAddressDeleteView(DeleteView):
     template_name = 'authorizedAddress/address_confirm_delete.html'
     context_object_name = 'address'
     # Redirigir a la lista después de eliminar
-    success_url = reverse_lazy('contractRegistry:address_list')
+    success_url = reverse_lazy('system_address_manager:address_list')

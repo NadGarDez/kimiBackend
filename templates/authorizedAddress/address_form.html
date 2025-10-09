@@ -116,7 +116,7 @@
     
     {% if form.instance.pk %}
     <p class="text-center text-text-dim small mt-4">
-        <a href="{% url 'contractRegistry:address_delete' pk=form.instance.pk %}" class="text-danger text-decoration-none">
+        <a href="{% url 'system_address_manager:address_delete' pk=form.instance.pk %}" class="text-danger text-decoration-none">
             Eliminar permanentemente esta dirección
         </a>
     </p>
