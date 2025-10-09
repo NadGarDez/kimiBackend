@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+    Registry - {% if form.instance.pk %}Editar{% else %}Registrar{% endif %} Dirección Autorizada
+{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content py-4" style="max-width: 600px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
+            {% if form.instance.pk %}
+                <i class="bi bi-pencil-square me-2"></i> Editar Dirección: {{ form.instance.address|truncatechars:10 }}...
+            {% else %}
+                <i class="bi bi-plus-circle me-2"></i> Registrar Nueva Dirección
+            {% endif %}
+        </h2>
+        
+        <button onclick="window.history.back()" 
+           class="btn btn-outline-info fw-bold text-uppercase">
+            <i class="bi bi-arrow-left-circle me-2"></i> Volver
+        </button>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-4"> 
+
+    <div class="card status-card-table p-4 border-info">
+        <p class="mb-4 text-text-dim">
+            {% if form.instance.pk %}
+                Modifique los detalles y el estado de la dirección autorizada.
+            {% else %}
+                Ingrese la dirección EVM del monedero que tendrá permisos de despliegue.
+            {% endif %}
+        </p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger" role="alert">
+                    <p class="fw-bold mb-0">⚠️ Errores Generales:</p>
+                    {% for error in form.non_field_errors %}
+                        {{ error }}
+                    {% endfor %}
+                </div>
+            {% endif %}
+            
+            <div class="mb-3">
+                <label for="{{ form.address.id_for_label }}" class="form-label text-accent">
+                    Dirección EVM (0x...)
+                </label>
+                <input type="text" 
+                       name="{{ form.address.name }}" 
+                       id="{{ form.address.id_for_label }}" 
+                       class="form-control bg-dark text-white border-info" 
+                       value="{% if form.address.value %}{{ form.address.value }}{% endif %}"
+                       placeholder="{{ form.address.field.widget.attrs.placeholder|default:'' }}"
+                       {% if form.address.field.required %}required{% endif %}>
+                       
+                <div class="form-text text-text-dim">
+                    Dirección pública del monedero (42 caracteres) que firmará el despliegue.
+                </div>
+                {% if form.address.errors %}
+                    <div class="text-warning mt-1">{{ form.address.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.description.id_for_label }}" class="form-label text-accent">
+                    Descripción (Opcional)
+                </label>
+                <textarea name="{{ form.description.name }}" 
+                          id="{{ form.description.id_for_label }}" 
+                          class="form-control bg-dark text-white border-info" 
+                          rows="3"
+                          placeholder="{{ form.description.field.widget.attrs.placeholder|default:'' }}"
+                          {% if form.description.field.required %}required{% endif %}>{% if form.description.value %}{{ form.description.value }}{% endif %}</textarea>
+
+                {% if form.description.errors %}
+                    <div class="text-warning mt-1">{{ form.description.errors }}</div>
+                {% endif %}
+            </div>
+
+            <div class="form-check form-switch mb-4 mt-4">
+                <input type="checkbox" 
+                       name="{{ form.is_active.name }}" 
+                       id="{{ form.is_active.id_for_label }}" 
+                       class="form-check-input" 
+                       role="switch"
+                       {% if form.is_active.value %}checked{% endif %}>
+                       
+                <label class="form-check-label text-accent" for="{{ form.is_active.id_for_label }}">
+                    Monedero Activo (Puede firmar)
+                </label>
+                <div class="form-text text-text-dim">
+                    Desactiva para revocar temporalmente el permiso de despliegue.
+                </div>
+                {% if form.is_active.errors %}
+                    <div class="text-warning mt-1">{{ form.is_active.errors }}</div>
+                {% endif %}
+            </div>
+            
+            <div class="d-grid gap-2 mt-4">
+                <button type="submit" class="btn btn-info fw-bold text-uppercase">
+                    {% if form.instance.pk %}
+                        <i class="bi bi-save me-2"></i> Guardar Cambios
+                    {% else %}
+                        <i class="bi bi-check-circle me-2"></i> Registrar Dirección
+                    {% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    {% if form.instance.pk %}
+    <p class="text-center text-text-dim small mt-4">
+        <a href="{% url 'contractRegistry:address_delete' pk=form.instance.pk %}" class="text-danger text-decoration-none">
+            Eliminar permanentemente esta dirección
+        </a>
+    </p>
+    {% endif %}
+
+</div>
+
+{% endblock %}

@@ -27,6 +27,24 @@ class AuthorizedAddressListView(ListView):
     context_object_name = 'addresses'
     paginate_by = 10
     queryset = AuthorizedAddress.objects.all().order_by('-created_at')
+    
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by('-created_at')
+        
+        status_filter = self.request.GET.get('status')
+        
+        if status_filter == 'active':
+            queryset = queryset.filter(is_active=True)
+            
+        elif status_filter == 'inactive':
+            queryset = queryset.filter(is_active=False)
+            
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['current_status'] = self.request.GET.get('status', 'all')
+        return context
 
 
 # ====================================================================

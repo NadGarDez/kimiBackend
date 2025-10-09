@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Registry - Lista de Monederos Autorizados{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content py-4">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
+            🛡️ Monederos de Despliegue Autorizados
+        </h2>
+        <a href="{% url 'system_address_manager:address_create' %}" 
+           class="btn btn-info fw-bold text-uppercase">
+            <i class="bi bi-plus-circle me-2"></i> Añadir Dirección
+        </a>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-4"> 
+    
+    <div class="d-flex mb-4">
+        <a href="{% url 'system_address_manager:address_list' %}" 
+           class="btn {% if current_status == 'all' %}btn-info{% else %}btn-outline-info{% endif %} me-2">
+           Todas ({{ addresses.count }})
+        </a>
+        
+        <a href="{% url 'system_address_manager:address_list' %}?status=active" 
+           class="btn {% if current_status == 'active' %}btn-success{% else %}btn-outline-success{% endif %} me-2">
+           Activas
+        </a>
+        
+        <a href="{% url 'system_address_manager:address_list' %}?status=inactive" 
+           class="btn {% if current_status == 'inactive' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+           Inactivas
+        </a>
+    </div>
+
+    <div class="card status-card-table p-0">
+        <div class="table-responsive">
+            <table class="table table-dark table-striped table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th scope="col">Dirección EVM</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col" class="text-center">Estado</th>
+                        <th scope="col">Creado</th>
+                        <th scope="col" class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for address in addresses %}
+                    <tr>
+                        <td class="font-monospace text-wrap">
+                            <a href="{% url 'system_address_manager:address_detail' pk=address.pk %}" class="text-info text-decoration-none">
+                                {{ address.address }}
+                            </a>
+                        </td>
+                        <td>
+                            {{ address.description|default:"— Sin descripción —"|truncatechars:50 }}
+                        </td>
+                        <td class="text-center">
+                            {% if address.is_active %}
+                                <span class="badge bg-success">Activa</span>
+                            {% else %}
+                                <span class="badge bg-danger">Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ address.created_at|date:"Y-m-d H:i" }}</td>
+                        <td class="text-center">
+                            <a href="{% url 'system_address_manager:address_update' pk=address.pk %}" 
+                               class="btn btn-sm btn-outline-warning me-1" title="Editar">
+                                <i class="bi bi-pencil"></i>
+                            </a>
+                            <a href="{% url 'system_address_manager:address_delete' pk=address.pk %}" 
+                               class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                <i class="bi bi-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-4">
+                            {% if current_status != 'all' %}
+                                No se encontraron direcciones en este estado.
+                            {% else %}
+                                No hay direcciones autorizadas registradas aún.
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    {% if is_paginated %}
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center pagination-dark">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}">Anterior</a></li>
+                {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">Anterior</a></li>
+                {% endif %}
+
+                <li class="page-item disabled"><span class="page-link">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span></li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&status={{ current_status }}">Siguiente</a></li>
+                {% else %}
+                    <li class="page-item disabled"><a class="page-link" href="#">Siguiente</a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    {% endif %}
+
+</div>
+
+{% endblock %}
