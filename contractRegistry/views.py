@@ -1,9 +1,12 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse, JsonResponse
+from django.views.decorators.http import require_POST
 from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
 from .models import BaseContract, ContractVersion, DeployedContract, Network
+from django.db import IntegrityError, transaction
 import random
 import string
+import json
 
 # Create your views here.
 
@@ -89,39 +92,70 @@ def registerVersion(request, contract_id):
     }
     return render(request, 'contractRegistry/register_version.html', context)
 
-
 def deployContract(request):
-    deploy_form = DeployForm()
-    add_network_form = NetworkForm()
     
-    if request.method == "POST":
-        deploy_form = DeployForm(request.POST)
-        add_network_form = NetworkForm()  
-        if deploy_form.is_valid():
-            deployed_contract = DeployedContract()
+    if request.method != "POST":
+        deploy_form = DeployForm()
+        add_network_form = NetworkForm()
+        context = {
+            'deploy_form': deploy_form,
+            'add_network_form': add_network_form,
+        }
+        return render(request, 'contractRegistry/deploy_version.html', context)
+        
+    deploy_form = DeployForm(request.POST)
+    add_network_form = NetworkForm() 
+    
+    params_string = request.POST.get('params', '{}').strip() 
+    
+    if deploy_form.is_valid():
+        
+        try:
+            params_data = json.loads(params_string)
+            print(f"Parsed params_data: {params_data}")
+        except json.JSONDecodeError:
+            deploy_form.add_error(None, 'El contenido de los parámetros JSON ("params") no es un formato JSON válido. Por favor, corrígelo.')
             
-            deployed_contract.contract_version = deploy_form.cleaned_data['version']
-            deployed_contract.network = deploy_form.cleaned_data['network']
-            deployed_contract.base_contract = deployed_contract.contract_version.base_contract
-            address = "0x" + ''.join(random.choices('0123456789abcdef', k=40))
-            gas_used = random.randint(100000, 500000)
+            context = {
+                'deploy_form': deploy_form,
+                'add_network_form': add_network_form,
+            }
+            return render(request, 'contractRegistry/deploy_version.html', context)
+        
+        deployed_contract = DeployedContract()
+        
+        try:
+            with transaction.atomic():
+                deployed_contract.contract_version = deploy_form.cleaned_data['version']
+                deployed_contract.network = deploy_form.cleaned_data['network']
+                deployed_contract.base_contract = deployed_contract.contract_version.base_contract
+                
+                address = "0x" + ''.join(random.choices('0123456789abcdef', k=40))
+                gas_used = random.randint(100000, 500000)
 
-            deployed_contract.address = address
-            deployed_contract.gas_used = gas_used
-            deployed_contract.is_current = True
-            deployed_contract.save()
+                deployed_contract.address = address
+                deployed_contract.gas_used = gas_used
+                deployed_contract.is_current = True
+                
+                deployed_contract.save()
+            
             return redirect('contractRegistry:contract_detail', contract_id=deployed_contract.contract_version.base_contract.id)
-        else:
-            print(deploy_form.errors)
+            
+        except IntegrityError as e:
+            print(f"Database Integrity Error during save: {e}")
+            deploy_form.add_error(None, f"Error al guardar el contrato en la base de datos (Integrity Error): {e}")
+            
+        except Exception as e:
+            print(f"Unexpected Error during save: {e}")
+            deploy_form.add_error(None, f"Ocurrió un error inesperado al intentar guardar: {e}")
 
+    
     context = {
         'deploy_form': deploy_form,
         'add_network_form': add_network_form,
-        # Necesitarás pasar cualquier otra variable necesaria, como el ContractVersion
     }
-    
     return render(request, 'contractRegistry/deploy_version.html', context)
-
+    
 
 def registerNetwork(request):
     if request.method == "POST":
