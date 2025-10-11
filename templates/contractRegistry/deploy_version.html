@@ -55,24 +55,40 @@
                     {% endif %}
                 </div>
             </div>
-
-            <div class="mb-4">
-                <label for="{{ deploy_form.network.id_for_label }}" class="form-label text-accent">
-                    Red de Destino
-                </label>
-                <div class="input-group">
-                    {{ deploy_form.network }}
-                    
-                    <a href="{% url 'contractRegistry:register_network' %}"
-                       class="btn btn-warning fw-bold text-uppercase" >
-                        <i class="bi bi-plus-lg me-1"></i> Añadir Red
-                    </a>
-                </div>
-                <div class="form-text text-text-dim">Red blockchain donde se ejecutará el despliegue.</div>
+            
+            <div class="row">
                 
-                {% if deploy_form.network.errors %}
-                    <div class="text-warning mt-1">{{ deploy_form.network.errors }}</div>
-                {% endif %}
+                <div class="col-md-6 mb-4">
+                    <label for="{{ deploy_form.network.id_for_label }}" class="form-label text-accent">
+                        Red de Destino
+                    </label>
+                    <div class="input-group">
+                        {{ deploy_form.network }}
+                        
+                        <a href="{% url 'contractRegistry:register_network' %}"
+                           class="btn btn-warning fw-bold text-uppercase" >
+                            <i class="bi bi-plus-lg me-1"></i> Añadir Red
+                        </a>
+                    </div>
+                    <div class="form-text text-text-dim">Red blockchain donde se ejecutará el despliegue.</div>
+                    
+                    {% if deploy_form.network.errors %}
+                        <div class="text-warning mt-1">{{ deploy_form.network.errors }}</div>
+                    {% endif %}
+                </div>
+                
+                <div class="col-md-6 mb-4">
+                    <label for="{{ deploy_form.deployer.id_for_label }}" class="form-label text-accent">
+                        Dirección Desplegadora
+                    </label>
+                    {{ deploy_form.deployer }}
+                    <div class="form-text text-text-dim">Monedero autorizado que firmará el despliegue (campo 'from').</div>
+                    
+                    {% if deploy_form.deployer.errors %}
+                        <div class="text-warning mt-1">{{ deploy_form.deployer.errors }}</div>
+                    {% endif %}
+                </div>
+
             </div>
             
             <div class="mb-4">

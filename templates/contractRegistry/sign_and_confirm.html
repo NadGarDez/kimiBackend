@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Confirmar Firma: {{ contract_name }} v{{ version_number }}{% endblock %}
+
+{% block content %}
+
+<div class="centered-container mx-auto dashboard-content py-4" style="max-width: 900px;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4 border-0">
+        <h2 class="h3 text-accent mb-0" style="border-bottom: none !important;">
+            Firma y Despliegue en Blockchain
+        </h2>
+        <a href="{% url 'contractRegistry:deploy_contract' %}" 
+           class="btn btn-outline-info fw-bold text-uppercase">
+            <i class="bi bi-arrow-left-circle me-2"></i> Nuevo Despliegue
+        </a>
+    </div>
+    
+    <hr class="text-accent mt-0 mb-2"> 
+    
+    <div class="mb-4 welcome-card p-4">
+        <p class="mb-1 lead text-text-dim">
+            Revise los detalles antes de firmar. Su billetera (MetaMask) se abrirá a continuación para confirmar la transacción en la red.
+        </p>
+        <p class="mb-0 text-danger fw-bold" id="status-message">
+            ⚠️ Estatus: Esperando conexión con MetaMask...
+        </p>
+    </div>
+
+    <div class="card status-card-table p-4 mb-4 border-info">
+        <h4 class="text-text-light mb-4">Detalles de la Transacción</h4>
+        
+        <dl class="row detail-list mb-0">
+            <dt class="col-sm-3 text-accent">Contrato:</dt>
+            <dd class="col-sm-9 text-light">{{ contract_name }} (v{{ version_number }})</dd>
+
+            <dt class="col-sm-3 text-accent">Red de Destino:</dt>
+            <dd class="col-sm-9 text-info">{{ deployed_contract.network.name }} (Chain ID: {{ chain_id }})</dd>
+            
+            <dt class="col-sm-3 text-accent">Dirección Firmante:</dt>
+            <dd class="col-sm-9 font-monospace text-warning">{{ deployer_address }}</dd>
+        </dl>
+        
+        <hr class="text-text-dim my-3">
+        
+        <h5 class="text-text-light mt-3">Parámetros del Constructor (JSON Final)</h5>
+        <div class="bg-dark text-white border border-info p-3 rounded font-monospace" style="max-height: 250px; overflow-y: auto;">
+            <pre id="final-params-display" class="m-0 p-0 text-white small">Cargando parámetros...</pre>
+        </div>
+        
+    </div>
+
+    <div class="d-grid mt-4">
+        <button type="button" id="start-deployment-btn" class="btn btn-success fw-bold text-uppercase" disabled>
+            <i class="bi bi-wallet-fill me-2"></i> Iniciar Firma con Billetera
+        </button>
+    </div>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/web3.min.js' %}"></script>
+
+<script>
+    // =======================================================================
+    // 1. VARIABLES DE CONTEXTO (PASADAS DESDE DJANGO)
+    // =======================================================================
+    const DEPLOYMENT_ID = "{{ deployed_contract.pk }}";
+    const NETWORK_RPC_URL = "{{ network_rpc_url }}";
+    const CONTRACT_ABI = {{ contract_abi|safe }}; 
+    const CONTRACT_BYTECODE = "{{ contract_bytecode }}";
+    const DEPLOYER_ADDRESS = "{{ deployer_address }}";
+    
+    // Parámetros finales del constructor cargados desde el JSONField del DB
+    const CONSTRUCTOR_PARAMS_VALUES = {{ constructor_params_values|safe }}; 
+
+    document.addEventListener('DOMContentLoaded', async function() {
+        const statusMessage = document.getElementById('status-message');
+        const startDeploymentBtn = document.getElementById('start-deployment-btn');
+        const finalParamsDisplay = document.getElementById('final-params-display');
+
+        // 1. Mostrar los parámetros reales en la UI
+        finalParamsDisplay.textContent = JSON.stringify(CONSTRUCTOR_PARAMS_VALUES, null, 2);
+
+
+        // 2. Conexión y chequeo de MetaMask
+        if (typeof window.ethereum === 'undefined') {
+            statusMessage.innerHTML = "❌ <strong>ERROR:</strong> MetaMask no está instalado. Instálalo para continuar.";
+            return;
+        }
+
+        const web3 = new Web3(window.ethereum);
+
+        startDeploymentBtn.disabled = false;
+        statusMessage.innerHTML = "✅ Estatus: Listo para iniciar el despliegue. Presiona el botón verde.";
+
+        startDeploymentBtn.addEventListener('click', async () => {
+            statusMessage.innerHTML = "⏳ Esperando confirmación en MetaMask...";
+            startDeploymentBtn.disabled = true;
+
+            try {
+                // Solicitar conexión de cuentas y obtener la cuenta actual
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const currentAccount = accounts[0];
+
+                // 💥 VALIDACIÓN CLAVE: Asegurar que la cuenta de MetaMask es la autorizada
+                if (currentAccount.toLowerCase() !== DEPLOYER_ADDRESS.toLowerCase()) {
+                    statusMessage.innerHTML = `⚠️ <strong>ERROR:</strong> Por favor, cambia tu billetera a la dirección autorizada: <span class="font-monospace">${DEPLOYER_ADDRESS}</span>`;
+                    startDeploymentBtn.disabled = false;
+                    return; 
+                }
+
+                // 3. Crear el objeto de contrato
+                const Contract = new web3.eth.Contract(CONTRACT_ABI);
+
+                // 4. Construir la transacción (Payload de despliegue)
+                const deployTx = Contract.deploy({
+                    data: "0x" + CONTRACT_BYTECODE,
+                    // Convertir el objeto JSON de parámetros a un array de valores ordenado
+                    arguments: Object.values(CONSTRUCTOR_PARAMS_VALUES) 
+                });
+
+                // 5. Enviar la transacción a MetaMask para la firma
+                const gasEstimate = await deployTx.estimateGas({ from: currentAccount });
+                
+                const receipt = await deployTx.send({
+                    from: currentAccount,
+                    gas: gasEstimate 
+                })
+                .on('transactionHash', (hash) => {
+                    statusMessage.innerHTML = `🚀 Transacción enviada. Hash: <span class="font-monospace text-info">${hash}</span>. Esperando minado...`;
+                    // **TO-DO:** Llamar a una API de Django para registrar el hash de la TX
+                })
+                .on('receipt', (receipt) => {
+                    // 6. Despliegue Exitoso
+                    statusMessage.innerHTML = `🎉 Despliegue Exitoso! Dirección del Contrato: <span class="font-monospace text-success">${receipt.contractAddress}</span>`;
+                    
+                    // **TO-DO:** Llamar a una API de Django para actualizar el estado final (address, gas_used)
+                    
+                    startDeploymentBtn.remove();
+                });
+                
+            } catch (error) {
+                console.error("Error de Despliegue:", error);
+                // Manejo de rechazo de firma u otros errores
+                const errorMessage = error.message.includes('User denied transaction signature') ? 'Firma rechazada por el usuario.' : (error.message || 'Fallo desconocido en la transacción.');
+                statusMessage.innerHTML = `❌ <strong>ERROR DE TRANSACCIÓN:</strong> ${errorMessage}`;
+                startDeploymentBtn.disabled = false;
+            }
+        });
+    });
+</script>
+{% endblock %}

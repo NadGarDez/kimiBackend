@@ -1,13 +1,13 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
+from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
 from .models import BaseContract, ContractVersion, DeployedContract, Network
 from django.db import IntegrityError, transaction
 import random
-import string
 import json
-
+from .utils import extract_constructor_inputs_from_abi
 # Create your views here.
 
 def index(request):
@@ -129,6 +129,8 @@ def deployContract(request):
                 deployed_contract.contract_version = deploy_form.cleaned_data['version']
                 deployed_contract.network = deploy_form.cleaned_data['network']
                 deployed_contract.base_contract = deployed_contract.contract_version.base_contract
+                deployed_contract.deployerAddress = deploy_form.cleaned_data['deployer']
+                deployed_contract.params = params_data
                 
                 # address = "0x" + ''.join(random.choices('0123456789abcdef', k=40))
                 # gas_used = random.randint(100000, 500000)
@@ -139,7 +141,7 @@ def deployContract(request):
                 
                 deployed_contract.save()
             
-            return redirect('contractRegistry:contract_detail', contract_id=deployed_contract.contract_version.base_contract.id)
+            return redirect('contractRegistry:sign_and_confirm_deployment', base_contract_id=deployed_contract.contract_version.base_contract.id)
             
         except IntegrityError as e:
             print(f"Database Integrity Error during save: {e}")
@@ -229,12 +231,62 @@ def networkList(request):
     return render(request, 'contractRegistry/network_list.html', context)
 
 
+def signAndConfirmDeployment(request, deployed_contract_id):
+    """
+    Prepara la página de confirmación. Obtiene todos los datos necesarios (ABI, Bytecode,
+    Args, Red, Deployer) para que el frontend (JavaScript/MetaMask) inicie la transacción.
+    """
+    try:
+        deployed_contract = get_object_or_404(DeployedContract, pk=deployed_contract_id)
+        version = deployed_contract.contract_version
+        
+        constructor_args_info = extract_constructor_inputs_from_abi(version.abi)
+        final_params_values = deployed_contract.params if deployed_contract.params else {}
+        
+       
+        context = {
+            'deployed_contract': deployed_contract,
+            'contract_name': deployed_contract.base_contract.name,
+            'version_number': version.version,
+            
+            'network_rpc_url': deployed_contract.network.rpc_url,
+            'chain_id': deployed_contract.network.chain_id,
+            'contract_abi': json.loads(version.abi), 
+            'contract_bytecode': version.bytecode,
+            'deployer_address': deployed_contract.deployerAddress.address,
+            
+            'constructor_params_values': final_params_values,
+            
+            'constructor_inputs': constructor_args_info,
+        }
+        
+        return render(request, 'contractRegistry/sign_and_confirm.html', context)
+    
+    except Http404:
+        raise Http404("El registro de despliegue no existe.")
+    except Exception as e:
+        # Manejo genérico de errores
+        print(f"Error al preparar la página de firma: {e}")
+        # Redirigir al inicio o mostrar un error
+        return redirect('contractRegistry:index') 
+
+
 def get_version_args(request, version_id):
+    """
+    Vista API para obtener los argumentos del constructor de una ContractVersion 
+    leyendo directamente su campo ABI.
+    """
     try:
         version = ContractVersion.objects.get(pk=version_id)
-        args = version.constructor_args_info 
+        
+        # 💥 CAMBIO CLAVE: Llamar a la función que parsea el ABI 💥
+        args = extract_constructor_inputs_from_abi(version.abi)
+        
         return JsonResponse({'args': args})
+        
     except ContractVersion.DoesNotExist:
         return JsonResponse({'args': []}, status=404)
+        
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        # Esto atrapará errores del ORM o errores no manejados en la función auxiliar
+        return JsonResponse({'error': f"Error interno del servidor: {e}"}, status=500)

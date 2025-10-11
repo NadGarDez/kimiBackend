@@ -2,6 +2,7 @@
 
 from django import forms
 from .models import BaseContract, ContractVersion, Network
+from system_address_manager.models import AuthorizedAddress
 
 # Estilo Base para los campos (para usar las clases de Bootstrap)
 WIDGET_CLASSES = {
@@ -12,7 +13,7 @@ class ContractVersionForm(forms.ModelForm):
     """Formulario para registrar una nueva versión de un contrato base."""
     class Meta:
         model = ContractVersion
-        fields = ['base_contract', 'version', 'bytecode', 'abi', 'constructor_args_info']
+        fields = ['base_contract', 'version', 'bytecode', 'abi']
         
         widgets = {
             'version': forms.TextInput(attrs=WIDGET_CLASSES),
@@ -21,7 +22,6 @@ class ContractVersionForm(forms.ModelForm):
             
             'abi': forms.Textarea(attrs={**WIDGET_CLASSES, 'rows': 8}),
             
-            'constructor_args_info': forms.Textarea(attrs={**WIDGET_CLASSES, 'rows': 4}),
         }
         
     def __init__(self, *args, **kwargs):
@@ -37,7 +37,6 @@ class ContractVersionForm(forms.ModelForm):
             self.fields['base_contract'].widget = forms.HiddenInput()
         
         self.fields['abi'].widget.attrs['placeholder'] = '[{"type": "constructor", "inputs": []}, ...]'
-        self.fields['constructor_args_info'].widget.attrs['placeholder'] = '[{"name": "tokenAddress", "type": "address"}, ...]'
 
 
 class BaseContractForm(forms.ModelForm):
@@ -64,6 +63,14 @@ class DeployForm(forms.Form):
         queryset=BaseContract.objects.all(),
         label="Contrato Base",
         empty_label="Seleccione un contrato",
+        widget=forms.Select(attrs=WIDGET_CLASSES)
+    )
+    
+    deployer = forms.ModelChoiceField(
+        # Este campo se llenará dinámicamente en la vista
+        queryset=AuthorizedAddress.objects.filter(is_active=True),
+        label="Dirección Desplegadora",
+        empty_label="Seleccione una dirección",
         widget=forms.Select(attrs=WIDGET_CLASSES)
     )
     

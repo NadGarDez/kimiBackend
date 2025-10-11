@@ -29,10 +29,6 @@ class ContractVersion(models.Model):
     version = models.CharField(max_length=50) 
     bytecode = models.TextField()                 
     abi = models.JSONField()
-    constructor_args_info = models.JSONField(
-        default=list, 
-        help_text="Lista de nombres y tipos de argumentos del constructor para validación."
-    )
     created_at = models.DateTimeField(auto_now_add=True)
     
     class Meta:
@@ -85,6 +81,7 @@ class DeployedContract(models.Model):
     base_contract = models.ForeignKey(BaseContract, on_delete=models.CASCADE, related_name='deployed_instances', editable=False, db_index=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    params = models.JSONField(blank=True, null=True, help_text="Parámetros del constructor usados en el despliegue.")
     
     
     status = models.CharField(

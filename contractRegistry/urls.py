@@ -13,6 +13,7 @@ urlpatterns = [
     path('version/list/', views.versionList, name='version_list'),
     path('deployed/<int:deployed_id>/', views.deployedContractDetail, name='deployed_contract_detail'),
     path('deploy/', views.deployContract, name='deploy_contract'),
+    path('deploy/sing_and_confirm/<int:base_contract_id>/', views.signAndConfirmDeployment, name='sign_and_confirm_deployment'),
     path('deploy/from/version/<int:version_id>/', views.deployContractFromVersion, name='deploy_contract_from_version'),
     path('deployed/list/', views.deployedContractList, name='deployed_contract_list'),
     path('network/register/', views.registerNetwork, name='register_network'),
