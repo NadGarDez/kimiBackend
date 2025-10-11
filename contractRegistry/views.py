@@ -141,7 +141,7 @@ def deployContract(request):
                 
                 deployed_contract.save()
             
-            return redirect('contractRegistry:sign_and_confirm_deployment', base_contract_id=deployed_contract.contract_version.base_contract.id)
+            return redirect('contractRegistry:sign_and_confirm_deployment', deployed_contract_id=deployed_contract.pk)
             
         except IntegrityError as e:
             print(f"Database Integrity Error during save: {e}")
@@ -241,6 +241,7 @@ def signAndConfirmDeployment(request, deployed_contract_id):
         version = deployed_contract.contract_version
         
         constructor_args_info = extract_constructor_inputs_from_abi(version.abi)
+        print(f"Constructor Args Info: {constructor_args_info}")
         final_params_values = deployed_contract.params if deployed_contract.params else {}
         
        
@@ -251,7 +252,7 @@ def signAndConfirmDeployment(request, deployed_contract_id):
             
             'network_rpc_url': deployed_contract.network.rpc_url,
             'chain_id': deployed_contract.network.chain_id,
-            'contract_abi': json.loads(version.abi), 
+            'contract_abi': version.abi, 
             'contract_bytecode': version.bytecode,
             'deployer_address': deployed_contract.deployerAddress.address,
             

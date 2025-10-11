@@ -1,0 +1,24 @@
+{
+  "_ticketNames": [
+    "Ticket Novato",
+    "Ticket Novato II",
+    "Ticket Avanzado",
+    "Ticket Experto",
+    "Ticket Profesional"
+  ],
+  "_ticketPrices": [
+    1,
+    5,
+    10,
+    25,
+    50
+  ],
+  "_ticketColorsForVariants": [
+    "#3498DB",
+    "#2ECC71",
+    "#F1C40F",
+    "#E74C3C",
+    "#9B59B6"
+  ],
+  "_feePercentage": 500
+}
