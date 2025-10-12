@@ -3,7 +3,7 @@ from django.http import HttpResponse, JsonResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.views.decorators.http import require_POST
 from .forms import DeployForm, NetworkForm, BaseContractForm, ContractVersionForm
-from .models import BaseContract, ContractVersion, DeployedContract, Network
+from .models import BaseContract, ContractVersion, DeployedContract, Network, DeploymentStatus
 from django.db import IntegrityError, transaction
 import random
 import json
@@ -291,3 +291,40 @@ def get_version_args(request, version_id):
     except Exception as e:
         # Esto atrapará errores del ORM o errores no manejados en la función auxiliar
         return JsonResponse({'error': f"Error interno del servidor: {e}"}, status=500)
+    
+    
+def final_deployment_step(request, deployed_contract_id):
+    """
+    Vista API para que el frontend llame una vez que la transacción de despliegue 
+    ha sido confirmada en la red. Actualiza el registro con la dirección y estado.
+    """
+    if request.method != "POST":
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    try:
+        deployed_contract = DeployedContract.objects.get(pk=deployed_contract_id)
+        
+        data = json.loads(request.body)
+        contract_address = data.get('contract_address')
+        gas_used = data.get('gas_used')
+        
+        if not contract_address or not gas_used:
+            return JsonResponse({'error': 'Faltan datos obligatorios'}, status=400)
+        
+        deployed_contract.address = contract_address
+        deployed_contract.gas_used = gas_used
+        deployed_contract.status = DeploymentStatus.CONFIRMED
+        deployed_contract.is_current = True
+        deployed_contract.save()
+        
+        return JsonResponse({'status': 'actualizado'})
+    
+    except DeployedContract.DoesNotExist:
+        return JsonResponse({'error': 'Registro de despliegue no encontrado'}, status=404)
+    
+    except json.JSONDecodeError:
+        return JsonResponse({'error': 'Cuerpo de petición no es JSON válido'}, status=400)
+    
+    except Exception as e:
+        print(f"Error al actualizar el despliegue: {e}")
+        return JsonResponse({'error': f'Error interno del servidor: {e}'}, status=500)

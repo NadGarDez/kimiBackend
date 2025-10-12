@@ -5,6 +5,10 @@
 
 {% block content %}
 
+<form style="display: none;">
+    {% csrf_token %} 
+</form>
+
 {{ contract_abi|json_script:"contract-abi-data" }}
 
 {{ constructor_params_values|json_script:"constructor-params-data" }}
@@ -96,6 +100,55 @@
         }
     }
     // =======================================================================
+
+    // =======================================================================
+    // FUNCIÓN DE LLAMADA FINAL A LA API DE DJANGO (PASO 7)
+    // =======================================================================
+    /**
+     * Envía la dirección final del contrato y el gas utilizado al backend de Django.
+     * @param {string} contractAddress - La dirección del contrato desplegado.
+     * @param {BigInt} gasUsed - La cantidad de gas utilizada (como BigInt de Ethers.js).
+     */
+    async function finalizeDeployment(contractAddress, gasUsed) {
+        const url = `/contractRegistry/deploy/step/final/${DEPLOYMENT_ID}/`;
+        // Obtener el token CSRF del DOM
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value; 
+
+        const postData = {
+            contract_address: contractAddress,
+            // Convertimos BigInt a string para el JSON, ya que JSON no soporta BigInt
+            gas_used: gasUsed.toString() 
+        };
+
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // Incluir el token CSRF para seguridad de Django
+                    'X-CSRFToken': csrfToken 
+                },
+                body: JSON.stringify(postData)
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                console.log("Backend actualizado con éxito:", result);
+                document.getElementById('status-message').innerHTML += 
+                    ' <br><span class="text-success fw-bold">✅ Backend Actualizado. Proceso finalizado.</span>';
+            } else {
+                console.error("Error del servidor al finalizar:", result.error);
+                document.getElementById('status-message').innerHTML += 
+                    ` <br><span class="text-danger fw-bold">❌ Error Backend: ${result.error}</span>`;
+            }
+        } catch (error) {
+            console.error("Error de red o desconocido al llamar a la API:", error);
+            document.getElementById('status-message').innerHTML += 
+                ' <br><span class="text-danger fw-bold">❌ Error de Red al contactar al servidor.</span>';
+        }
+    }
+    // =======================================================================
     
     document.addEventListener('DOMContentLoaded', async function() {
         const statusMessage = document.getElementById('status-message');
@@ -116,6 +169,7 @@
         }
 
         try {
+            // Inicializar provider y signer con Ethers v6
             provider = new ethers.BrowserProvider(window.ethereum);
             signer = await provider.getSigner();
 
@@ -153,13 +207,20 @@
                 statusMessage.innerHTML = `🚀 Transacción enviada. Hash: <span class="font-monospace text-info">${contract.deploymentTransaction().hash}</span>. Esperando confirmación...`;
 
                 // 5. Esperar la confirmación (mining)
+                // contract.deploymentTransaction().wait() devuelve un TransactionReceipt
                 const receipt = await contract.deploymentTransaction().wait(); 
 
                 // 6. Despliegue Exitoso
-                statusMessage.innerHTML = `🎉 Despliegue Exitoso! Dirección del Contrato: <span class="font-monospace text-success">${receipt.contractAddress}</span>`;
+                const finalAddress = receipt.contractAddress;
+                // gasUsed es un BigInt, que debe ser manejado para el JSON POST.
+                const finalGasUsed = receipt.gasUsed; 
                 
-                // **TO-DO:** Llamar a una API de Django para actualizar el estado final (address, gas_used, etc.)
+                statusMessage.innerHTML = `🎉 Despliegue Exitoso! Dirección del Contrato: <span class="font-monospace text-success">${finalAddress}</span>`;
                 
+                // 7. LLAMADA CRUCIAL AL BACKEND DE DJANGO PARA FINALIZAR EL REGISTRO
+                await finalizeDeployment(finalAddress, finalGasUsed);
+                
+                // Limpiar el botón y finalizar la UI
                 startDeploymentBtn.remove();
                 
             } catch (error) {
