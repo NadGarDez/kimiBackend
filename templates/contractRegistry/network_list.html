@@ -47,8 +47,20 @@
                             <span class="d-inline-block text-truncate" style="max-width: 250px;">{{ network.rpc_url }}</span>
                         </td>
                         <td>
-                            <!-- Botón deshabilitado para edición/configuración -->
-                            <button class="btn btn-sm btn-outline-warning me-2" disabled>
+                            <!-- Botón VER: Abre el Modal de Detalles (Estilo Info para consistencia) -->
+                            <button class="btn btn-sm btn-outline-info me-2 view-network-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#networkDetailModal"
+                                    data-id="{{ network.pk }}"
+                                    data-name="{{ network.name }}"
+                                    data-chainid="{{ network.chain_id }}"
+                                    data-rpcurl="{{ network.rpc_url }}"
+                                    data-explorer="{{ network.block_explorer_url|default:'N/A' }}">
+                                <i class="bi bi-eye"></i> Ver
+                            </button>
+                            
+                            <!-- Botón EDITAR (Amarillo, deshabilitado) -->
+                            <button class="btn btn-sm btn-outline-warning" disabled>
                                 <i class="bi bi-pencil-square"></i> Editar
                             </button>
                         </td>
@@ -62,4 +74,201 @@
         </table>
     </div>
 </div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 1: DETALLES/EDICIÓN DE LA RED (VIEW/EDIT) - Estilo Border-Info -->
+<!-- ======================================================================= -->
+<div class="modal fade" id="networkDetailModal" tabindex="-1" aria-labelledby="networkDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-info">
+            <div class="modal-header border-bottom border-info">
+                <h5 class="modal-title text-accent" id="networkDetailModalLabel">Administrar Red: <span id="modal-network-name" class="text-light"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="networkEditForm" data-network-id="">
+                    
+                    <!-- ID Interno (Readonly + Copy) -->
+                    <h6 class="text-text-light mt-0">ID Interno:</h6>
+                    <div class="input-group mb-3">
+                        <input type="text" id="modal-network-id-input" class="form-control bg-secondary text-text-dim font-monospace border-0" readonly />
+                        <button class="btn btn-outline-info" type="button" onclick="copyToClipboard('modal-network-id-input', 'ID Copiado')"><i class="bi bi-clipboard"></i> Copiar</button>
+                    </div>
+
+                    <!-- Nombre (Editable) -->
+                    <h6 class="text-text-light">Nombre:</h6>
+                    <input type="text" id="modal-network-name-input" name="name" class="form-control bg-dark text-light border border-info mb-3" required />
+                    
+                    <!-- Chain ID (Editable + Copy) -->
+                    <h6 class="text-text-light">Chain ID:</h6>
+                    <div class="input-group mb-3">
+                        <input type="text" id="modal-network-chainid-input" name="chain_id" class="form-control bg-dark text-light font-monospace border border-info" required />
+                        <button class="btn btn-outline-info" type="button" onclick="copyToClipboard('modal-network-chainid-input', 'Chain ID Copiado')"><i class="bi bi-clipboard"></i> Copiar</button>
+                    </div>
+
+                    <!-- URL RPC (Editable + Copy) -->
+                    <h6 class="text-text-light">URL RPC:</h6>
+                    <div class="input-group mb-3">
+                        <input type="url" id="modal-network-rpcurl-input" name="rpc_url" class="form-control bg-dark text-warning font-monospace border border-warning" required />
+                        <button class="btn btn-outline-warning" type="button" onclick="copyToClipboard('modal-network-rpcurl-input', 'RPC URL Copiado')"><i class="bi bi-clipboard"></i> Copiar</button>
+                    </div>
+
+                    <!-- URL Explorador (Editable + Copy) -->
+                    <h6 class="text-text-light">URL Explorador (Opcional):</h6>
+                    <div class="input-group mb-3">
+                        <input type="url" id="modal-network-explorer-input" name="block_explorer_url" class="form-control bg-dark text-text-dim font-monospace border border-info" />
+                        <button class="btn btn-outline-info" type="button" onclick="copyToClipboard('modal-network-explorer-input', 'URL Explorador Copiado')"><i class="bi bi-clipboard"></i> Copiar</button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top border-info">
+                <!-- Botón ELIMINAR: Dispara el Modal de Confirmación y se alinea a la izquierda (me-auto) -->
+                <button type="button" class="btn btn-danger me-auto" 
+                        data-bs-toggle="modal"
+                        data-bs-target="#deleteConfirmModal"
+                        id="open-delete-modal-btn">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" id="save-network-btn">
+                    <i class="bi bi-save"></i> Guardar Cambios (Pendiente)
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ======================================================================= -->
+<!-- MODAL 2: CONFIRMACIÓN DE ELIMINACIÓN (ACCIÓN ELIMINAR) - Mantiene Border-Danger -->
+<!-- ======================================================================= -->
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-sm modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-danger">
+            <div class="modal-header border-bottom border-danger">
+                <h5 class="modal-title text-danger" id="deleteConfirmModalLabel">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="text-light">¿Está seguro que desea eliminar la red **<span id="modal-delete-network-name" class="fw-bold text-warning"></span>**?</p>
+                <p class="text-danger small">Esta acción no se puede deshacer.</p>
+                <input type="hidden" id="modal-delete-network-id">
+            </div>
+            <div class="modal-footer border-top border-danger">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="confirm-delete-btn">
+                    <i class="bi bi-trash"></i> Eliminar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- ======================================================================= -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Función de utilidad para copiar texto al portapapeles
+    function copyToClipboard(elementId, successMessage = 'Copiado') {
+        const element = document.getElementById(elementId);
+        
+        // Determinar el texto a copiar (value para inputs)
+        const textToCopy = element.value;
+    
+        // Utilizar la API del portapapeles
+        navigator.clipboard
+            .writeText(textToCopy)
+            .then(() => {
+                // Pequeño feedback visual (sustitución de alert/confirm)
+                console.log(successMessage);
+                // Si tienes un sistema de toasts/notificaciones, úsalo aquí.
+            })
+            .catch((err) => {
+                console.error('Error al copiar: ', err);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // --- 1. Lógica para el Modal de Detalles (Ver/Editar) ---
+        const detailModal = document.getElementById('networkDetailModal');
+        const networkEditForm = document.getElementById('networkEditForm');
+        
+        detailModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget; // Botón 'Ver'
+            
+            // Extraer datos de los data-* del botón de la tabla
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const chainId = button.getAttribute('data-chainid');
+            const rpcUrl = button.getAttribute('data-rpcurl');
+            const explorerUrl = button.getAttribute('data-explorer');
+
+            // Asignar ID de red al formulario
+            networkEditForm.setAttribute('data-network-id', id);
+
+            // 1. Asignar datos al título del modal
+            document.getElementById('modal-network-name').textContent = name;
+
+            // 2. Asignar datos a los campos del formulario (usando .value)
+            document.getElementById('modal-network-id-input').value = id;
+            document.getElementById('modal-network-name-input').value = name;
+            document.getElementById('modal-network-chainid-input').value = chainId;
+            document.getElementById('modal-network-rpcurl-input').value = rpcUrl;
+            document.getElementById('modal-network-explorer-input').value = explorerUrl;
+        });
+
+        // Placeholder para la acción de guardar
+        document.getElementById('save-network-btn').addEventListener('click', function() {
+            const id = networkEditForm.getAttribute('data-network-id');
+            
+            // ⚠️ Placeholder: Aquí iría la lógica de la llamada AJAX (PATCH/PUT request)
+            
+            console.log(`[ACCIÓN PENDIENTE] Se intentaría guardar los cambios para la red con ID: ${id}`);
+
+            // Cerrar el modal (usando la API de Bootstrap)
+            const modalInstance = bootstrap.Modal.getInstance(detailModal);
+            modalInstance.hide();
+        });
+
+
+        // --- 2. Lógica para el Modal de Confirmación (Eliminar) ---
+        const deleteModal = document.getElementById('deleteConfirmModal');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
+        
+        // Cuando se muestra el Modal de Confirmación (Delete Modal),
+        // lee la información que ya está en el formulario de edición.
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            
+            // 1. Lee la información del formulario (Modal 1)
+            const id = document.getElementById('modal-network-id-input').value;
+            const name = document.getElementById('modal-network-name-input').value; 
+
+            // 2. Asigna esos datos al Modal de Confirmación (Modal 2)
+            document.getElementById('modal-delete-network-name').textContent = name;
+            document.getElementById('modal-delete-network-id').value = id; // Guardar el ID en un input oculto
+            
+            // 3. Oculta el Modal de Detalles para que solo se vea el de confirmación
+            const detailModalInstance = bootstrap.Modal.getInstance(detailModal);
+            if (detailModalInstance) {
+                detailModalInstance.hide();
+            }
+        });
+
+        // --- 3. Manejo del Clic en 'Confirmar Eliminar' (Sin Request por ahora) ---
+        confirmDeleteBtn.addEventListener('click', function() {
+            const networkIdToDelete = document.getElementById('modal-delete-network-id').value;
+            const networkName = document.getElementById('modal-delete-network-name').textContent;
+            
+            // ⚠️ Placeholder: Aquí iría la lógica de la llamada AJAX (DELETE request)
+            
+            console.log(`[ACCIÓN PENDIENTE] Se intentaría eliminar la red con ID: ${networkIdToDelete} (${networkName})`);
+            
+            // Cerrar el modal (usando la API de Bootstrap)
+            const modalInstance = bootstrap.Modal.getInstance(deleteModal);
+            modalInstance.hide();
+        });
+
+    });
+</script>
 {% endblock %}
