@@ -32,7 +32,8 @@
                     <th scope="col" class="text-accent">Contrato Base</th>
                     <th scope="col" class="text-accent">Versión</th>
                     <th scope="col" class="text-accent">Red</th>
-                    <th scope="col" class="text-accent">Dirección (Address)</th>
+                    <th scope="col" class="text-accent">Address</th>
+                    <th scope="col" class="text-accent">Activo</th>
                     <th scope="col" class="text-accent">Desplegado el</th>
                     <th scope="col" class="text-accent">Acciones</th>
                 </tr>
@@ -46,20 +47,121 @@
                         <td>
                             <span class="d-inline-block text-truncate" style="max-width: 150px;">{{ deployment.address }}</span>
                         </td>
-                        <td>{{ deployment.deployed_at|date:'Y-m-d' }}</td>
                         <td>
-                            <button class="btn btn-sm btn-outline-warning me-2" disabled>
+                            {% if deployment.is_current %}
+                                <i class="bi bi-check-circle-fill text-success" title="Versión de contrato activa actualmente"></i>
+                            {% else %}
+                                <i class="bi bi-circle-fill text-danger" title="Versión de contrato inactiva/obsoleta"></i>
+                            {% endif %}
+                        </td>
+                        <td>{{ deployment.updated_at|date:'Y-m-d' }}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-warning me-2 interact-btn"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#interactionModal"
+                                    data-address="{{ deployment.address }}"
+                                    data-abi="{{ deployment.contract_version.abi|escapejs }}">
                                 <i class="bi bi-plug"></i> Interactuar
                             </button>
                         </td>
                     </tr>
                 {% empty %}
                     <tr class="text-center">
-                        <td colspan="6" class="text-warning fw-bold">No hay contratos desplegados activos registrados aún.</td>
+                        <td colspan="7" class="text-warning fw-bold">No hay contratos desplegados activos registrados aún.</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
 </div>
+
+<div class="modal fade" id="interactionModal" tabindex="-1" aria-labelledby="interactionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content bg-dark text-white border-info">
+            <div class="modal-header border-bottom border-info">
+                <h5 class="modal-title text-accent" id="interactionModalLabel">Información Vital del Contrato</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                
+                <h6 class="text-text-light mt-0">Dirección del Contrato:</h6>
+                <div class="input-group mb-4">
+                    <input type="text" id="modal-contract-address" class="form-control bg-secondary text-warning font-monospace border-0" value="" readonly>
+                    <button class="btn btn-outline-warning" type="button" onclick="copyToClipboard('modal-contract-address')">Copiar</button>
+                </div>
+
+                <h6 class="text-text-light">ABI (Application Binary Interface):</h6>
+                <div class="d-grid gap-2 mb-3">
+                    <button class="btn btn-outline-info" type="button" onclick="copyToClipboard('modal-contract-abi-pre')">Copiar ABI Completo</button>
+                </div>
+                <div class="bg-secondary p-3 rounded font-monospace" style="max-height: 400px; overflow-y: auto;">
+                    <pre id="modal-contract-abi-pre" class="m-0 p-0 text-white small"></pre>
+                </div>
+                
+            </div>
+            <div class="modal-footer border-top border-info">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Función de utilidad para copiar texto al portapapeles
+    function copyToClipboard(elementId) {
+        const element = document.getElementById(elementId);
+        let textToCopy;
+
+        if (element.tagName === 'PRE') {
+            textToCopy = element.textContent;
+        } else {
+            textToCopy = element.value;
+        }
+
+        navigator.clipboard.writeText(textToCopy)
+            .then(() => {
+                // Pequeño feedback visual temporal (opcional)
+                const originalText = element.tagName === 'PRE' ? 'ABI Copiado' : 'Copiado';
+                alert(originalText);
+            })
+            .catch(err => {
+                console.error('Error al copiar: ', err);
+            });
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const interactionModal = document.getElementById('interactionModal');
+        const modalAddressInput = document.getElementById('modal-contract-address');
+        const modalAbiPre = document.getElementById('modal-contract-abi-pre');
+
+        // Escucha cuando se abre el modal
+        interactionModal.addEventListener('show.bs.modal', function (event) {
+            // Botón que activó el modal
+            const button = event.relatedTarget;
+            
+            // Extraer información de los atributos data-* del botón
+            const contractAddress = button.getAttribute('data-address');
+            // El ABI ya está escapado por Django, hay que desescaparlo y parsearlo
+            const rawAbi = button.getAttribute('data-abi');
+
+            // 1. Mostrar la Dirección
+            modalAddressInput.value = contractAddress;
+            
+            // 2. Procesar y Formatear el ABI
+            try {
+                // Desescapar (si es necesario) y parsear el JSON
+                const abiJson = JSON.parse(rawAbi); 
+                
+                // Formatear el JSON para una mejor lectura
+                modalAbiPre.textContent = JSON.stringify(abiJson, null, 2);
+
+            } catch (e) {
+                console.error("Error al parsear el ABI:", e);
+                modalAbiPre.textContent = "Error: El ABI no es un JSON válido o está mal formateado.";
+            }
+        });
+    });
+</script>
 {% endblock %}

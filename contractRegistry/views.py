@@ -214,14 +214,21 @@ def versionList(request):
     }
     return render(request, 'contractRegistry/version_list.html', context)
 
-
 def deployedContractList(request):
-    deployed_contracts = DeployedContract.objects.all()
+    """
+    Muestra la lista de contratos desplegados con estatus CONFIRMED,
+    ordenados de forma descendente por la fecha de actualización.
+    """
+    deployed_contracts = DeployedContract.objects.filter(
+        status=DeploymentStatus.CONFIRMED 
+    ).order_by(
+        '-updated_at' 
+    )
+    
     context = {
         'deployed_contracts': deployed_contracts
     }
     return render(request, 'contractRegistry/deployed_contract_list.html', context)
-
 
 def networkList(request):
     all_networks = Network.objects.all()
