@@ -172,6 +172,36 @@ def registerNetwork(request):
     }
     return render(request, 'contractRegistry/register_network.html', context)
 
+@require_POST
+def editNetwork(request, pk):
+    """View para editar una Network existente.
+    La PK se pasa a través de la URL.
+    Esta vista está optimizada para ser llamada por la acción 'Guardar Cambios' del modal.
+    """
+    network = get_object_or_404(Network, pk=pk) 
+
+    form = NetworkForm(request.POST, instance=network)
+    
+    if form.is_valid():
+        form.save()
+        return redirect('contractRegistry:network_list') 
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Datos de formulario no válidos.'}, status=400)
+    
+
+@require_POST
+def deleteNetwork(request, pk):
+    """View para eliminar una Network. Solo acepta peticiones POST (ideal para AJAX)."""
+    
+    network = get_object_or_404(Network, pk=pk)
+    network_name = network.name 
+    
+    try:
+        network.delete()
+        return JsonResponse({'status': 'success', 'message': f'Red {network_name} eliminada.'})
+            
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': 'No se pudo eliminar la red.'}, status=400)
 
 
 def deployContractFromVersion(request, version_id):

@@ -55,13 +55,8 @@
                                     data-name="{{ network.name }}"
                                     data-chainid="{{ network.chain_id }}"
                                     data-rpcurl="{{ network.rpc_url }}"
-                                    data-explorer="{{ network.block_explorer_url|default:'N/A' }}">
+                                    data-explorer="{{ network.block_explorer_url|default:'' }}">
                                 <i class="bi bi-eye"></i> Ver
-                            </button>
-                            
-                            <!-- Botón EDITAR (Amarillo, deshabilitado) -->
-                            <button class="btn btn-sm btn-outline-warning" disabled>
-                                <i class="bi bi-pencil-square"></i> Editar
                             </button>
                         </td>
                     </tr>
@@ -87,6 +82,7 @@
             </div>
             <div class="modal-body">
                 <form id="networkEditForm" data-network-id="">
+                    {% csrf_token %} <!-- Asegura que el input oculto CSRF esté disponible en el DOM -->
                     
                     <!-- ID Interno (Readonly + Copy) -->
                     <h6 class="text-text-light mt-0">ID Interno:</h6>
@@ -132,7 +128,7 @@
 
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-warning" id="save-network-btn">
-                    <i class="bi bi-save"></i> Guardar Cambios (Pendiente)
+                    <i class="bi bi-save"></i> Guardar Cambios
                 </button>
             </div>
         </div>
@@ -150,7 +146,8 @@
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p class="text-light">¿Está seguro que desea eliminar la red **<span id="modal-delete-network-name" class="fw-bold text-warning"></span>**?</p>
+                <!-- CORREGIDO: Uso de <strong> en lugar de sintaxis Markdown (**) -->
+                <p class="text-light">¿Está seguro que desea eliminar la red <strong><span id="modal-delete-network-name" class="fw-bold text-warning"></span></strong>?</p>
                 <p class="text-danger small">Esta acción no se puede deshacer.</p>
                 <input type="hidden" id="modal-delete-network-id">
             </div>
@@ -173,44 +170,50 @@
     function copyToClipboard(elementId, successMessage = 'Copiado') {
         const element = document.getElementById(elementId);
         
-        // Determinar el texto a copiar (value para inputs)
         const textToCopy = element.value;
     
-        // Utilizar la API del portapapeles
         navigator.clipboard
             .writeText(textToCopy)
             .then(() => {
-                // Pequeño feedback visual (sustitución de alert/confirm)
                 console.log(successMessage);
-                // Si tienes un sistema de toasts/notificaciones, úsalo aquí.
+                // Aquí podrías mostrar un toast o una notificación visual
             })
             .catch((err) => {
                 console.error('Error al copiar: ', err);
             });
     }
 
+    // Función para obtener el token CSRF de la cookie
+    function getCsrfToken() {
+        // Busca el input oculto generado por {% csrf_token %}
+        const tokenElement = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (!tokenElement) {
+            console.error("CSRF token element not found in the DOM.");
+            return '';
+        }
+        return tokenElement.value;
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-        // --- 1. Lógica para el Modal de Detalles (Ver/Editar) ---
         const detailModal = document.getElementById('networkDetailModal');
+        const deleteModal = document.getElementById('deleteConfirmModal');
         const networkEditForm = document.getElementById('networkEditForm');
+        const saveNetworkBtn = document.getElementById('save-network-btn');
+        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
         
+        // --- 1. Lógica para el Modal de Detalles (Ver/Editar) ---
         detailModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget; // Botón 'Ver'
+            const button = event.relatedTarget;
             
-            // Extraer datos de los data-* del botón de la tabla
             const id = button.getAttribute('data-id');
             const name = button.getAttribute('data-name');
             const chainId = button.getAttribute('data-chainid');
             const rpcUrl = button.getAttribute('data-rpcurl');
             const explorerUrl = button.getAttribute('data-explorer');
 
-            // Asignar ID de red al formulario
             networkEditForm.setAttribute('data-network-id', id);
 
-            // 1. Asignar datos al título del modal
             document.getElementById('modal-network-name').textContent = name;
-
-            // 2. Asignar datos a los campos del formulario (usando .value)
             document.getElementById('modal-network-id-input').value = id;
             document.getElementById('modal-network-name-input').value = name;
             document.getElementById('modal-network-chainid-input').value = chainId;
@@ -218,55 +221,98 @@
             document.getElementById('modal-network-explorer-input').value = explorerUrl;
         });
 
-        // Placeholder para la acción de guardar
-        document.getElementById('save-network-btn').addEventListener('click', function() {
+        // --- 2. Manejo de la Edición (Guardar Cambios) ---
+        saveNetworkBtn.addEventListener('click', async function() {
             const id = networkEditForm.getAttribute('data-network-id');
+            const editUrl = "{% url 'contractRegistry:edit_network' pk=0 %}".replace('0', id);
             
-            // ⚠️ Placeholder: Aquí iría la lógica de la llamada AJAX (PATCH/PUT request)
+            // Recolectar datos del formulario
+            const formData = new FormData(networkEditForm);
             
-            console.log(`[ACCIÓN PENDIENTE] Se intentaría guardar los cambios para la red con ID: ${id}`);
+            try {
+                const response = await fetch(editUrl, {
+                    method: 'POST',
+                    body: formData, // FormData maneja el content-type multipart/form-data
+                });
 
-            // Cerrar el modal (usando la API de Bootstrap)
-            const modalInstance = bootstrap.Modal.getInstance(detailModal);
-            modalInstance.hide();
+                // Si la respuesta es una redirección (HTTP 302 de Django), recarga la página.
+                if (response.redirected) {
+                    window.location.href = response.url;
+                    return;
+                }
+
+                // Si es un JSON (ej. si falla la validación en Django y devuelve 400 JsonResponse)
+                const result = await response.json();
+
+                if (response.ok) {
+                    console.log('Edición exitosa:', result.message);
+                    // Si la vista no redirigió, forzamos la recarga si fue exitoso.
+                    window.location.reload(); 
+                } else {
+                    console.error('Error de validación o servidor:', result.message);
+                    // Aquí se podría mostrar result.message al usuario en el modal
+                }
+
+            } catch (error) {
+                console.error('Error al enviar la petición de edición:', error);
+            } finally {
+                // Cerrar el modal (si la vista de Django no redirigió)
+                const modalInstance = bootstrap.Modal.getInstance(detailModal);
+                if (modalInstance) modalInstance.hide();
+            }
         });
 
 
-        // --- 2. Lógica para el Modal de Confirmación (Eliminar) ---
-        const deleteModal = document.getElementById('deleteConfirmModal');
-        const confirmDeleteBtn = document.getElementById('confirm-delete-btn');
-        
-        // Cuando se muestra el Modal de Confirmación (Delete Modal),
-        // lee la información que ya está en el formulario de edición.
+        // --- 3. Lógica para el Modal de Confirmación (Eliminar) ---
         deleteModal.addEventListener('show.bs.modal', function (event) {
-            
-            // 1. Lee la información del formulario (Modal 1)
+            // Lee la información del formulario (Modal 1)
             const id = document.getElementById('modal-network-id-input').value;
             const name = document.getElementById('modal-network-name-input').value; 
 
-            // 2. Asigna esos datos al Modal de Confirmación (Modal 2)
+            // Asigna esos datos al Modal de Confirmación (Modal 2)
             document.getElementById('modal-delete-network-name').textContent = name;
-            document.getElementById('modal-delete-network-id').value = id; // Guardar el ID en un input oculto
+            document.getElementById('modal-delete-network-id').value = id;
             
-            // 3. Oculta el Modal de Detalles para que solo se vea el de confirmación
+            // Oculta el Modal de Detalles
             const detailModalInstance = bootstrap.Modal.getInstance(detailModal);
             if (detailModalInstance) {
                 detailModalInstance.hide();
             }
         });
 
-        // --- 3. Manejo del Clic en 'Confirmar Eliminar' (Sin Request por ahora) ---
-        confirmDeleteBtn.addEventListener('click', function() {
+        // --- 4. Manejo del Clic en 'Confirmar Eliminar' (AJAX a deleteNetwork) ---
+        confirmDeleteBtn.addEventListener('click', async function() {
             const networkIdToDelete = document.getElementById('modal-delete-network-id').value;
-            const networkName = document.getElementById('modal-delete-network-name').textContent;
+            const deleteUrl = "{% url 'contractRegistry:delete_network' pk=0 %}".replace('0', networkIdToDelete);
             
-            // ⚠️ Placeholder: Aquí iría la lógica de la llamada AJAX (DELETE request)
-            
-            console.log(`[ACCIÓN PENDIENTE] Se intentaría eliminar la red con ID: ${networkIdToDelete} (${networkName})`);
-            
-            // Cerrar el modal (usando la API de Bootstrap)
-            const modalInstance = bootstrap.Modal.getInstance(deleteModal);
-            modalInstance.hide();
+            try {
+                const response = await fetch(deleteUrl, {
+                    method: 'POST',
+                    headers: {
+                        // Enviamos el token CSRF obtenido del DOM en el header
+                        'X-CSRFToken': getCsrfToken(), 
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    console.log('Eliminación exitosa:', result.message);
+                    // Refrescar la página o actualizar la tabla
+                    window.location.reload(); 
+                } else {
+                    console.error('Error al eliminar:', result.message);
+                    // Aquí se podría mostrar result.message al usuario
+                }
+
+            } catch (error) {
+                console.error('Error en la petición de eliminación:', error);
+            } finally {
+                // Cerrar el modal de confirmación
+                const modalInstance = bootstrap.Modal.getInstance(deleteModal);
+                if (modalInstance) modalInstance.hide();
+            }
         });
 
     });

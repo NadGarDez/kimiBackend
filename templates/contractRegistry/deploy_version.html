@@ -171,7 +171,7 @@
             deployButton.disabled = true;
 
             try {
-                const url = `/contractRegistry/api/version_args/${versionId}/`; 
+                const url = `/contractRegistry/version/version_args/${versionId}/`; 
                 const response = await fetch(url, {
                     method: 'GET',
                     headers: {
