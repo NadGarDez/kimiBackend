@@ -158,6 +158,79 @@ def deployContract(request):
     }
     return render(request, 'contractRegistry/deploy_version.html', context)
     
+    
+def deployContractFromVersion(request, version_id):
+    """
+    Gestiona el despliegue de un contrato a partir de una versión específica.
+    Asegura que la información del Contrato Base y la Versión estén disponibles para el template.
+    Prepara la entrada del contrato en la BD y redirige al paso de firma.
+    """
+    contract_version = get_object_or_404(ContractVersion, id=version_id)
+    
+    base_contract = contract_version.base_contract
+    
+    if request.method == "POST":
+        deploy_form = DeployForm(request.POST) 
+        add_network_form = NetworkForm() 
+        
+        params_string = request.POST.get('params', '{}').strip() 
+        params_data = {}
+        
+        if deploy_form.is_valid():
+            
+            try:
+                params_data = json.loads(params_string)
+            except json.JSONDecodeError:
+                deploy_form.add_error(None, 'El contenido de los parámetros JSON ("params") no es un formato JSON válido. Por favor, corrígelo.')
+                
+                context = {
+                    'deploy_form': deploy_form,
+                    'add_network_form': add_network_form,
+                }
+                return render(request, 'contractRegistry/deploy_version.html', context)
+            
+            
+            try:
+                with transaction.atomic(): 
+                    deployed_contract = DeployedContract()
+                    deployed_contract.contract_version = contract_version
+                    deployed_contract.network = deploy_form.cleaned_data['network']
+                    deployed_contract.base_contract = base_contract
+                    
+                    if 'deployer' in deploy_form.cleaned_data:
+                        deployed_contract.deployerAddress = deploy_form.cleaned_data['deployer']
+                    
+                    deployed_contract.params = params_data
+                    
+                    deployed_contract.is_current = False 
+                    
+                    deployed_contract.save()
+                
+                return redirect('contractRegistry:sign_and_confirm_deployment', deployed_contract_id=deployed_contract.pk)
+                
+            except IntegrityError as e:
+                print(f"Database Integrity Error during save: {e}")
+                deploy_form.add_error(None, f"Error de integridad en la base de datos: {e}")
+            except Exception as e:
+                print(f"Unexpected Error during save: {e}")
+                deploy_form.add_error(None, f"Ocurrió un error inesperado al intentar guardar: {e}")
+        
+
+    else:
+        deploy_form = DeployForm(initial={'version': contract_version.pk, 'base_contract': base_contract.pk})
+        add_network_form = NetworkForm() 
+        
+    
+    context = {
+        'deploy_form': deploy_form,
+        'add_network_form': add_network_form,
+        'contract_version': contract_version, 
+        'base_contract': base_contract, 
+    }
+    
+    return render(request, 'contractRegistry/deploy_version.html', context)
+
+    
 
 def registerNetwork(request):
     if request.method == "POST":
