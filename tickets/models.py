@@ -8,7 +8,7 @@ class TicketEventLog(models.Model):
     deployed_contract = models.ForeignKey(
         DeployedContract, 
         on_delete=models.CASCADE,
-        related_name='ticket_events',
+        related_name='event_logs_tickets', 
         verbose_name="Contrato Desplegado"
     )
     event_name = models.CharField(max_length=100, verbose_name="Nombre del Evento")
@@ -24,3 +24,4 @@ class TicketEventLog(models.Model):
 
     def __str__(self):
         return f"[{self.event_name}] Block: {self.block_number}"
+
