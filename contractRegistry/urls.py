@@ -11,6 +11,7 @@ urlpatterns = [
     path('contract/list/', views.contractList, name='contract_list'),
     path('contract/<int:contract_id>/', views.contractDetail, name='contract_detail'),
     path('contract/register/', views.registerContract, name='register_contract'),
+    path('contract/edit/<int:pk>/', views.editBaseContract, name='edit_base_contract'),
     
     # Versiones
     path('version/list/', views.versionList, name='version_list'),

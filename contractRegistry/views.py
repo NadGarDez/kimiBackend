@@ -63,6 +63,31 @@ def registerContract(request):
     }
     return render(request, 'contractRegistry/register_contract.html', context=context)
 
+
+@require_POST
+def editBaseContract(request, pk):
+    """
+    View para editar el nombre de un Contrato Base existente.
+    Solo se permite editar el campo 'name'. Responde con JSON para la petición AJAX.
+    """
+    contract = get_object_or_404(BaseContract, pk=pk) 
+    
+    new_name = request.POST.get('name', '').strip()
+    
+    if not new_name:
+        return JsonResponse({'status': 'error', 'message': 'El nombre del contrato no puede estar vacío.'}, status=400)
+    
+    if new_name == contract.name:
+        return JsonResponse({'status': 'success', 'message': f'Contrato {new_name} guardado (no se detectaron cambios).'})
+
+    try:
+        contract.name = new_name
+        contract.save()
+        return JsonResponse({'status': 'success', 'message': f'Contrato {new_name} actualizado con éxito.'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': f'Error al guardar en BD: {e}'}, status=400)
+
+
 def registerVersion(request, contract_id): 
     try:
         base_contract = BaseContract.objects.get(id=contract_id)

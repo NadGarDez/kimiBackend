@@ -53,6 +53,16 @@
                                 <td class="text-text-dim">{{ contract.created_at|date:"Y-m-d" }}</td>
                                 
                                 <td>
+                                    <!-- Botón de Edición (Cambiado a outline-info) -->
+                                    <button class="btn btn-sm btn-outline-info fw-bold me-2 edit-contract-btn"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editContractModal"
+                                            data-id="{{ contract.pk }}"
+                                            data-name="{{ contract.name }}">
+                                        <i class="bi bi-pencil-square"></i> Editar
+                                    </button>
+                                    
+                                    <!-- Botón de Ver Detalle -->
                                     <a href="{% url 'contractRegistry:contract_detail' contract.pk %}" class="btn btn-sm btn-outline-info fw-bold">
                                         Ver
                                     </a>
@@ -80,4 +90,122 @@
 
 </div>
 
+<!-- ======================================================================= -->
+<!-- MODAL: EDICIÓN DE CONTRATO BASE (EDIT) - Estilo Azul (Info) -->
+<!-- ======================================================================= -->
+<div class="modal fade" id="editContractModal" tabindex="-1" aria-labelledby="editContractModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered">
+        <div class="modal-content bg-dark text-white border-info">
+            <div class="modal-header border-bottom border-info">
+                <h5 class="modal-title text-accent" id="editContractModalLabel">Editar Contrato Base: <span id="modal-edit-contract-name-title" class="text-info"></span></h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="contractEditForm" data-contract-id="">
+                    {% csrf_token %} 
+                    
+                    <!-- ID Interno (Readonly) -->
+                    <h6 class="text-text-light mt-0">ID Interno:</h6>
+                    <div class="input-group mb-3">
+                        <input type="text" id="modal-edit-contract-id-input" class="form-control bg-secondary text-text-dim font-monospace border-0" readonly />
+                    </div>
+
+                    <!-- Nombre (Editable) -->
+                    <h6 class="text-text-light">Nombre:</h6>
+                    <input type="text" id="modal-edit-contract-name-input" name="name" class="form-control bg-dark text-light border border-info mb-3" required />
+                    
+                    <p class="small text-text-dim">Solo se permite editar el nombre del contrato base.</p>
+                </form>
+            </div>
+            <div class="modal-footer border-top border-info">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-info" id="save-contract-name-btn">
+                    <i class="bi bi-save"></i> Guardar Nombre
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Función para obtener el token CSRF (necesario para peticiones AJAX)
+    function getCsrfToken() {
+        const tokenElement = document.querySelector('input[name="csrfmiddlewaretoken"]');
+        if (!tokenElement) {
+            console.error("CSRF token element not found in the DOM.");
+            return '';
+        }
+        return tokenElement.value;
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const editModal = document.getElementById('editContractModal');
+        const contractEditForm = document.getElementById('contractEditForm');
+        const saveContractNameBtn = document.getElementById('save-contract-name-btn');
+
+        // 1. Lógica para abrir y popular el Modal de Edición
+        editModal.addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            
+            const id = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+
+            contractEditForm.setAttribute('data-contract-id', id);
+
+            document.getElementById('modal-edit-contract-name-title').textContent = name;
+            document.getElementById('modal-edit-contract-id-input').value = id;
+            document.getElementById('modal-edit-contract-name-input').value = name;
+        });
+
+        // 2. Manejo de la Edición (Guardar Nombre)
+        saveContractNameBtn.addEventListener('click', async function() {
+            const id = contractEditForm.getAttribute('data-contract-id');
+            const newName = document.getElementById('modal-edit-contract-name-input').value.trim();
+
+            if (newName === "") {
+                console.error("El nombre del contrato no puede estar vacío.");
+                // Aquí se podría añadir una alerta visual simple
+                return;
+            }
+
+            // NOTA: La URL debe coincidir con la definida en urls.py para la vista editContract
+            const editUrl = "{% url 'contractRegistry:edit_base_contract' pk=0 %}".replace('0', id);
+            
+            const formData = new FormData();
+            formData.append('name', newName);
+            // El token CSRF ya está en el DOM por el {% csrf_token %} dentro del form
+            formData.append('csrfmiddlewaretoken', getCsrfToken()); 
+
+            try {
+                const response = await fetch(editUrl, {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    console.log('Edición exitosa:', result.message);
+                    // Recargamos la página para que la tabla muestre el nuevo nombre
+                    window.location.reload(); 
+                } else {
+                    // Si hay un error (ej. nombre vacío, error de servidor)
+                    console.error('Error al actualizar:', result.message);
+                    // Aquí se podría mostrar result.message al usuario dentro del modal
+                }
+
+            } catch (error) {
+                console.error('Error al enviar la petición de edición:', error);
+            } finally {
+                // Cerrar el modal después de la operación (si la recarga no ocurre inmediatamente)
+                const modalInstance = bootstrap.Modal.getInstance(editModal);
+                if (modalInstance) modalInstance.hide();
+            }
+        });
+
+    });
+</script>
 {% endblock %}
