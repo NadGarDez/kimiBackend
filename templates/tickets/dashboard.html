@@ -182,6 +182,27 @@
             </div>
         </div>
 
+        <!-- NEW: Contract Balance Card (Balance Nativo) -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div id="contractBalanceCard" class="base-card p-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <div class="mb-3 mb-md-0">
+                        <h5 class="fw-bold text-light mb-1"><i class="bi bi-coin me-2 text-warning"></i> Balance Nativo del Contrato</h5>
+                        <p id="balanceStatus" class="text-dim small mb-0">Presiona "Consultar Balance" para verificar el monto en la red.</p>
+                    </div>
+                    <div class="text-center text-md-end">
+                        <p id="contractBalanceDisplay" class="display-5 fw-bolder text-warning mb-2">
+                            --.-- ETH
+                        </p>
+                        <button id="refreshBalanceBtn" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Consultar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- END NEW: Contract Balance Card -->
+
         <!-- PESTAÑAS DE NAVEGACIÓN -->
         <ul class="nav nav-tabs" id="ticketTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -347,7 +368,7 @@
         const safeParseJson = (id) => {
             const el = document.getElementById(id);
             if (!el) {
-                console.error(`Elemento con ID ${id} no encontrado.`);
+                // console.error(`Elemento con ID ${id} no encontrado.`);
                 return null;
             }
             try {
@@ -385,17 +406,18 @@
             metamaskStatusCard: document.getElementById('metamask-status-card'),
             connectMetamaskBtn: document.getElementById('connect-metamask-btn'),
             executionFormsContainer: document.getElementById('execution-forms-container'),
+            
+            // NUEVAS REFERENCIAS AÑADIDAS para el balance del contrato
+            contractBalanceDisplay: document.getElementById('contractBalanceDisplay'),
+            refreshBalanceBtn: document.getElementById('refreshBalanceBtn'),
+            balanceStatus: document.getElementById('balanceStatus')
         };
 
         // 3. Definir las funciones objetivo Específicas para ESTE dashboard
         const TICKET_ADMIN_FUNCTIONS = [
-            {% comment %} 'authorizePool',  {% endcomment %}
-            {% comment %} 'awardPrize',  {% endcomment %}
             'depositEmergencyFunds', 
-            {% comment %} 'markTicketAsUsed',  {% endcomment %}
             'setPlatformFee', 
             'setPoolFactoryAddress', 
-            {% comment %} 'unmarkTicketAsUsed', {% endcomment %}
             'contractOwner', 
             'platformFeeBasisPoints',
             'poolFactoryAddress',
@@ -406,8 +428,53 @@
         // 4. Inicializar el módulo externo
         AdminDashboard = AdminDashboardUtils(CONTRACT_CONFIG, DOM_ELEMENTS, TICKET_ADMIN_FUNCTIONS);
 
-        // 5. Iniciar la conexión de la wallet
-        AdminDashboard.connectWallet(); 
+        
+        // 5. LÓGICA AGREGADA PARA EL BALANCE DEL CONTRATO
+        
+        /**
+         * Actualiza la interfaz de usuario con el balance del contrato.
+         */
+        const updateBalanceUI = async () => {
+            if (!AdminDashboard || !DOM_ELEMENTS.contractBalanceDisplay) return;
+
+            // Bloquear UI
+            DOM_ELEMENTS.balanceStatus.textContent = 'Consultando la blockchain...';
+            DOM_ELEMENTS.contractBalanceDisplay.textContent = '...';
+            DOM_ELEMENTS.refreshBalanceBtn.disabled = true;
+            DOM_ELEMENTS.refreshBalanceBtn.classList.remove('btn-outline-warning');
+            DOM_ELEMENTS.refreshBalanceBtn.classList.add('btn-secondary');
+
+            try {
+                // Llamar a la función del módulo que consulta el balance.
+                const balance = await AdminDashboard.fetchContractBalance();
+                
+                DOM_ELEMENTS.contractBalanceDisplay.textContent = balance;
+                DOM_ELEMENTS.balanceStatus.textContent = `Última actualización: ${new Date().toLocaleTimeString()}`;
+            } catch (e) {
+                console.error("Fallo al actualizar el balance:", e);
+                DOM_ELEMENTS.contractBalanceDisplay.textContent = 'ERROR';
+                DOM_ELEMENTS.balanceStatus.textContent = 'Error al consultar el balance.';
+            } finally {
+                // Desbloquear UI
+                DOM_ELEMENTS.refreshBalanceBtn.disabled = false;
+                DOM_ELEMENTS.refreshBalanceBtn.classList.add('btn-outline-warning');
+                DOM_ELEMENTS.refreshBalanceBtn.classList.remove('btn-secondary');
+            }
+        };
+
+        // 6. Conexión de Eventos
+        
+        // Iniciar la conexión de la wallet
+        DOM_ELEMENTS.connectMetamaskBtn.addEventListener('click', AdminDashboard.connectWallet); 
+        
+        // Conectar la lógica de balance
+        DOM_ELEMENTS.refreshBalanceBtn.addEventListener('click', updateBalanceUI);
+        
+        // Iniciar la consulta de balance al cargar
+        updateBalanceUI(); 
+
+        // Refrescar automáticamente cada 60 segundos
+        setInterval(updateBalanceUI, 60000); 
     });
 </script>
 {% endblock %}

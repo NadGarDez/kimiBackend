@@ -8,7 +8,7 @@
  * @param {Object} config - Objeto con las constantes del contrato (ABI, Address, ChainID).
  * @param {Object} dom - Objeto con las referencias directas a los elementos del DOM.
  * @param {Array<string>} targetFunctions - Lista de nombres de funciones del ABI a exponer.
- * @returns {Object} Objeto público con métodos 'connectWallet' y 'generateForms'.
+ * @returns {Object} Objeto público con métodos 'connectWallet', 'generateForms' y 'fetchContractBalance'.
  */
 const AdminDashboardUtils = (config, dom, targetFunctions) => {
 
@@ -69,6 +69,30 @@ const AdminDashboardUtils = (config, dom, targetFunctions) => {
         // address, bytes, string, arrays (e.g. string[])
         return 'text'; 
     };
+    
+    // --- LÓGICA AGREGADA: Obtener Balance del Contrato ---
+    
+    /**
+     * Obtiene y formatea el balance del token nativo (ej. ETH) del Contrato.
+     * Esta función solo requiere que el 'provider' esté inicializado (no requiere conexión de wallet).
+     * * @returns {string} Balance formateado o 'N/A'.
+     */
+    const fetchContractBalance = async () => {
+        // Nota: Solo necesitamos el 'provider', no el 'signer' ni la 'userAccount' para esta consulta.
+        if (!provider || !CONTRACT_ADDRESS) return 'N/A';
+        try {
+            // Utilizamos el CONTRACT_ADDRESS para obtener el balance.
+            const balanceWei = await provider.getBalance(CONTRACT_ADDRESS);
+            // Convertir a Ether y formatear
+            const balanceEth = ethers.formatEther(balanceWei);
+            // Mostrar la moneda nativa (e.g., ETH, MATIC)
+            return `${parseFloat(balanceEth).toFixed(4)} ${REQUIRED_NETWORK_NAME.toUpperCase()}`; 
+        } catch (error) {
+            console.error("Error al obtener el balance del contrato:", error);
+            return 'Error';
+        }
+    };
+
 
     // --- Lógica de Conexión Web3 ---
 
@@ -261,6 +285,11 @@ const AdminDashboardUtils = (config, dom, targetFunctions) => {
             // Desbloquear UI
             originalButton.disabled = false;
             originalButton.textContent = originalButtonText;
+            
+            // Si fue una transacción de escritura exitosa, actualiza el estado de la wallet
+            if (functionType !== 'read' && resultDiv.innerHTML.includes('Transacción Exitosa')) {
+                connectWallet();
+            }
         }
     };
 
@@ -401,6 +430,8 @@ const AdminDashboardUtils = (config, dom, targetFunctions) => {
 
     return {
         connectWallet: connectWallet,
-        generateForms: generateForms
+        generateForms: generateForms,
+        // NUEVA FUNCIÓN EXPUESTA:
+        fetchContractBalance: fetchContractBalance 
     };
 };
