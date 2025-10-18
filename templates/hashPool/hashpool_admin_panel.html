@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Hash Pool - Panel de Control{% endblock %}
+
+{% block content %}
+<!-- IMPORTANTE: Cargamos Ethers.js y el módulo de utilidades -->
+<!-- Asumiendo que 'formUtils.js' contiene la clase AdminDashboardUtils -->
+<script src="{% static 'js/local/formUtils.js' %}"></script>
+
+<style>
+    /* -------------------------------------------------------------------- */
+    /* ESTILOS GLOBALES Y VARIABLES (Mismos estilos que la plantilla de Tickets) */
+    /* -------------------------------------------------------------------- */
+    :root {
+        --primary-dark: #121212; /* Fondo principal oscuro */
+        --card-dark: #1e1e1e; /* Fondo de tarjetas */
+        --accent-color: #00bcd4; /* Color de acento (Cyan/Info) */
+        --text-dim: #b0b0b0; /* Texto tenue/secundario */
+    }
+
+    /* Asumimos que el fondo de la página es muy oscuro, ajustamos el cuerpo */
+    body {
+        background-color: var(--primary-dark) !important;
+        color: #ffffff;
+    }
+
+    /* Contenedor principal para un ancho cómodo */
+    .dashboard-content {
+        max-width: 1000px;
+        min-height: 80vh;
+        margin-top: 2rem;
+        padding: 0 1rem;
+    }
+
+    /* Estilos de Tarjeta Base */
+    .base-card {
+        background-color: var(--card-dark);
+        border: 1px solid #333;
+        border-radius: 0.75rem; /* Esquinas más redondeadas */
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Texto Dim */
+    .text-dim {
+        color: var(--text-dim) !important;
+    }
+
+    /* -------------------------------------------------------------------- */
+    /* SECCIÓN DE CONTRATO Y METAMASK */
+    /* -------------------------------------------------------------------- */
+    .contract-info-card {
+        border-left: 5px solid var(--accent-color);
+        padding: 1.5rem;
+        transition: transform 0.2s ease;
+    }
+
+    /* Estilos específicos para Metamask status */
+    #metamask-status-card {
+        border-color: #555 !important;
+        background-color: #282828 !important;
+        min-width: 250px;
+        text-align: right;
+    }
+    #metamask-status-card.border-success { border-color: #198754 !important; }
+    #metamask-status-card.border-warning { border-color: #ffc107 !important; }
+    #metamask-status-card.border-danger { border-color: #dc3545 !important; }
+    
+    #connect-metamask-btn {
+        transition: all 0.2s;
+    }
+
+    /* -------------------------------------------------------------------- */
+    /* PESTAÑAS (TABS) */
+    /* -------------------------------------------------------------------- */
+    .nav-tabs {
+        border-bottom: none;
+    }
+    .nav-tabs .nav-link {
+        color: var(--text-dim);
+        border: none;
+        border-radius: 0.75rem 0.75rem 0 0;
+        margin-right: 5px;
+        padding: 0.75rem 1.25rem;
+        transition: all 0.3s;
+    }
+    .nav-tabs .nav-link:hover {
+        background-color: #282828;
+        color: #fff;
+    }
+    .nav-tabs .nav-link.active {
+        background-color: var(--card-dark);
+        color: var(--accent-color) !important;
+        font-weight: bold;
+        border: 1px solid #333;
+        border-bottom-color: var(--card-dark) !important; /* Esconder borde inferior */
+    }
+    
+    .tab-content {
+        background-color: var(--card-dark) !important;
+        border: 1px solid #333;
+        border-top-left-radius: 0;
+        border-radius: 0.75rem;
+        padding: 2rem !important;
+        box-shadow: none;
+    }
+    
+    /* -------------------------------------------------------------------- */
+    /* SECCIÓN DE FORMULARIOS (Generados por JS) */
+    /* -------------------------------------------------------------------- */
+    #execution-forms-container .card {
+        background-color: #282828;
+        border-color: #444;
+        border-radius: 0.5rem;
+    }
+    
+    #execution-forms-container .card-header {
+        background-color: #222; /* Fondo del header del acordeón */
+        border-bottom: 1px solid #444;
+        padding: 0;
+    }
+    
+    #execution-forms-container .card-header button {
+        color: #fff;
+        padding: 0.75rem 1.25rem;
+        font-size: 1rem;
+    }
+
+    /* Estilo para los campos dentro de los formularios */
+    #execution-forms-container .form-control {
+        background-color: #333 !important;
+        border-color: #555 !important;
+        color: #fff !important;
+        font-family: 'Courier New', Courier, monospace;
+    }
+    
+    /* Pre-formato para resultados y logs */
+    pre {
+        background-color: #222 !important;
+        padding: 0.5rem;
+        border-radius: 0.25rem;
+        color: #e0e0e0;
+        overflow-x: auto;
+    }
+</style>
+<div class="centered-container mx-auto dashboard-content">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h3 text-light mb-0" style="border-bottom: none !important;">
+            <i class="bi bi-currency-bitcoin me-2 text-info"></i> Panel de Administración de Hash Pool
+        </h2>
+    </div>
+    
+    <!-- Bloque de Contrato Activo / Error -->
+    {% if error_message %}
+        <div class="base-card p-4 text-center mt-4 border border-danger">
+            <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+            <h4 class="text-danger mt-3">Error de Contrato Activo</h4>
+            <p class="text-dim mb-0">
+                {{ error_message }}
+            </p>
+        </div>
+    {% else %}
+        <!-- Título y Datos del Contrato -->
+        <div class="base-card contract-info-card mb-5 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div class="mb-3 mb-md-0">
+                <h5 class="fw-bold text-light mb-1">{{ contract.base_contract.name }} (Activo)</h5>
+                <p class="text-dim mb-1" style="font-size: 0.9rem;">
+                    Dirección: <code class="text-info">{{ contract.address }}</code>
+                </p>
+                <p class="text-dim mb-0" style="font-size: 0.9rem;">
+                    Red Requerida: <span class="badge bg-info text-dark fw-bold" id="required-network-name">{{ contract.network.name }}</span> (ID: {{ contract.network.chain_id }})
+                </p>
+            </div>
+            <!-- Indicador de estado de Metamask -->
+            <div id="metamask-status-card" class="base-card p-3 shadow-lg border-secondary" style="min-width: 250px;">
+                <p class="mb-2 small fw-bold text-dim" id="metamask-status-text">
+                    <i class="bi bi-x-circle-fill text-danger me-1"></i> Wallet Desconectada
+                </p>
+                <button id="connect-metamask-btn" class="btn btn-sm btn-outline-info w-100" onclick="AdminDashboard.connectWallet()">
+                    Conectar Wallet
+                </button>
+            </div>
+        </div>
+
+        <!-- Contract Balance Card (Balance Nativo) -->
+        <div class="row mb-5">
+            <div class="col-12">
+                <div id="contractBalanceCard" class="base-card p-4 d-flex flex-column flex-md-row justify-content-between align-items-center">
+                    <div class="mb-3 mb-md-0">
+                        <h5 class="fw-bold text-light mb-1"><i class="bi bi-coin me-2 text-warning"></i> Balance Nativo del Contrato</h5>
+                        <p id="balanceStatus" class="text-dim small mb-0">Presiona "Consultar Balance" para verificar el monto en la red.</p>
+                    </div>
+                    <div class="text-center text-md-end">
+                        <p id="contractBalanceDisplay" class="display-5 fw-bolder text-warning mb-2">
+                            --.-- ETH
+                        </p>
+                        <button id="refreshBalanceBtn" class="btn btn-sm btn-outline-warning">
+                            <i class="bi bi-arrow-clockwise me-1"></i> Consultar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PESTAÑAS DE NAVEGACIÓN -->
+        <ul class="nav nav-tabs" id="poolTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="stats-tab" data-bs-toggle="tab" data-bs-target="#stats" type="button" role="tab" aria-controls="stats" aria-selected="true">
+                    <i class="bi bi-bar-chart-line-fill me-1"></i> Estadísticas
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="execute-tab" data-bs-toggle="tab" data-bs-target="#execute" type="button" role="tab" aria-controls="execute" aria-selected="false">
+                    <i class="bi bi-terminal-fill me-1"></i> Ejecutar Funciones
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="events-tab" data-bs-toggle="tab" data-bs-target="#events" type="button" role="tab" aria-controls="events" aria-selected="false">
+                    <i class="bi bi-list-columns-reverse me-1"></i> Log de Eventos
+                </button>
+            </li>
+        </ul>
+
+        <!-- CONTENIDO DE LAS PESTAÑAS -->
+        <div class="tab-content base-card" id="poolTabsContent">
+            
+            <!-- 1. PESTAÑA DE ESTADÍSTICAS -->
+            <div class="tab-pane fade show active" id="stats" role="tabpanel" aria-labelledby="stats-tab">
+                <h4 class="text-light mb-4 border-bottom border-secondary pb-2">Métricas Clave del Contrato (Hash Pool)</h4>
+                <div class="row g-4">
+                    <!-- Tarjeta: Liquidez Total (Placeholder) -->
+                    <div class="col-md-6">
+                        <div class="card bg-dark text-light border-info base-card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title text-info"><i class="bi bi-cash-stack me-2"></i> Liquidez Total (ETH/Native)</h5>
+                                <!-- Aquí se mostraría el valor de stats.total_pool_deposits, formateado en JS -->
+                                <p class="card-text display-4 fw-bold mb-1" id="totalLiquidityDisplay">{{ stats.total_pool_deposits }}</p> 
+                                <p class="card-text text-dim small">Balance total de la pool en la moneda nativa (en WEI).</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tarjeta: Tokens Soportados (Placeholder) -->
+                    <div class="col-md-6">
+                        <div class="card bg-dark text-light border-warning base-card shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title text-warning"><i class="bi bi-terminal-fill me-2"></i> Transacciones Totales</h5>
+                                <!-- Aquí se mostraría el valor de stats.total_pool_transactions -->
+                                <p class="card-text display-4 fw-bold mb-1" id="supportedTokensCount">{{ stats.total_pool_transactions }}</p> 
+                                <p class="card-text text-dim small">Número total de eventos/transacciones registradas.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. PESTAÑA DE EJECUCIÓN DE FUNCIONES -->
+            <div class="tab-pane fade" id="execute" role="tabpanel" aria-labelledby="execute-tab">
+                <h4 class="text-light mb-4 border-bottom border-secondary pb-2">Ejecutar Funciones del Contrato (Write/Read)</h4>
+                
+                <div id="execution-forms-container">
+                    <!-- Los formularios se cargarán aquí por JavaScript -->
+                    <div class="text-center p-5">
+                        <i class="bi bi-hourglass-split text-info" style="font-size: 2rem;"></i>
+                        <p class="text-dim mt-2">Cargando funciones de administración...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. PESTAÑA DE LOG DE EVENTOS -->
+            <div class="tab-pane fade" id="events" role="tabpanel" aria-labelledby="events-tab">
+                <h4 class="text-light mb-4 d-flex justify-content-between border-bottom border-secondary pb-2">
+                    Log de Eventos Recientes
+                    <button id="refresh-events-btn" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Refrescar
+                    </button>
+                </h4>
+                
+                <div class="table-responsive base-card p-3" style="max-height: 500px; overflow-y: auto;">
+                    <table class="table table-dark table-striped table-hover mb-0"> 
+                        <thead class="sticky-top" style="background-color: #222;">
+                            <tr>
+                                <th scope="col" class="text-info fw-bold">Evento</th>
+                                <th scope="col" class="text-info fw-bold">Datos Clave</th>
+                                <th scope="col" class="text-info fw-bold">Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody id="events-table-body">
+                            {% for event in recent_events %}
+                            <tr>
+                                <td class="fw-bold text-light" style="width: 20%;">{{ event.event_name }}</td>
+                                <td class="text-dim" style="width: 60%;">
+                                    <pre class="mb-0 p-0 text-dim" style="background: none; border: none; font-size: 0.8rem; overflow-x: auto; white-space: pre-wrap;">
+                                        <!-- Usar ID único para el script tag dentro del loop -->
+                                        {% with unique_id="event-data-json-"|add:forloop.counter %}
+                                            {{ event.event_data|json_script:unique_id }}
+                                            <script>
+                                                // Usamos el ID único para parsear el JSON de este evento específico
+                                                const uniqueId = "event-data-json-{{ forloop.counter }}";
+                                                const rawJson = document.getElementById(uniqueId).textContent.trim();
+                                                try {
+                                                    document.write(JSON.stringify(JSON.parse(rawJson), null, 2));
+                                                } catch (e) {
+                                                    document.write("Error al parsear JSON");
+                                                }
+                                            </script>
+                                        {% endwith %}
+                                    </pre>
+                                </td>
+                                <td class="text-dim small" style="width: 20%;">{{ event.timestamp|date:"Y-m-d H:i:s" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center text-dim p-4">
+                                    <i class="bi bi-info-circle me-1"></i> No se han registrado eventos recientemente para este contrato.
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+        </div>
+        
+        <!-- Datos de contexto para JavaScript: ABI, ID del Contrato y Chain ID -->
+        {% if contract %}
+            <!-- ABI (Objeto complejo) -->
+            {{ abi|json_script:"contract-abi-data" }}
+            
+            <!-- Dirección del Contrato (String simple, formateado como JSON) -->
+            <script id="contract-address-data" type="application/json">
+                {"address": "{{ contract.address|escapejs }}"}
+            </script>
+
+            <!-- Chain ID (Número simple, formateado como JSON) -->
+            <script id="contract-chain-id-data" type="application/json">
+                {"chain_id": {{ contract.network.chain_id }}}
+            </script>
+
+            <!-- RPC URL (String simple, formateado como JSON) -->
+            <script id="contract-rpc-url-data" type="application/json">
+                {"rpc_url": "{{ contract.network.rpc_url|escapejs }}"}
+            </script>
+        {% endif %}
+
+    {% endif %}
+
+</div>
+
+<script>
+    // -------------------------------------------------------------------------
+    // SCRIPT DE INICIALIZACIÓN PRINCIPAL (Adaptado para Hash Pool Admin)
+    // -------------------------------------------------------------------------
+
+    // Variable global que contendrá el objeto de utilidades
+    let AdminDashboard = null;
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // 1. Verificación de Ethers y utilidades externas
+        if (typeof ethers === 'undefined' || typeof AdminDashboardUtils === 'undefined') {
+            console.error("Ethers.js o AdminDashboardUtils no están cargados.");
+            return;
+        }
+
+        // --- Carga y Parseo de datos de Configuración (JSON/Django) ---
+        
+        // Función auxiliar para parsear y limpiar el contenido de los script tags
+        const safeParseJson = (id) => {
+            const el = document.getElementById(id);
+            if (!el) {
+                // console.error(`Elemento con ID ${id} no encontrado.`);
+                return null;
+            }
+            try {
+                // CRÍTICO: Usamos .textContent.trim() para limpiar cualquier whitespace
+                return JSON.parse(el.textContent.trim());
+            } catch (e) {
+                console.error(`Error al parsear JSON del elemento ${id}:`, e);
+                return null;
+            }
+        };
+
+        const ABI_DATA = safeParseJson('contract-abi-data');
+        const ADDRESS_DATA = safeParseJson('contract-address-data');
+        const CHAIN_ID_DATA = safeParseJson('contract-chain-id-data');
+        const RPC_URL_DATA = safeParseJson('contract-rpc-url-data');
+        const REQUIRED_NETWORK_NAME = document.getElementById('required-network-name')?.textContent || 'Desconocida';
+        
+        // Verificación de datos esenciales
+        if (!ABI_DATA || !ADDRESS_DATA || !CHAIN_ID_DATA) {
+             console.error("Datos esenciales del contrato faltan o son inválidos.");
+             return; 
+        }
+
+        const CONTRACT_CONFIG = {
+            ABI: ABI_DATA,
+            CONTRACT_ADDRESS: ADDRESS_DATA.address,
+            REQUIRED_CHAIN_ID: CHAIN_ID_DATA.chain_id,
+            REQUIRED_RPC_URL: RPC_URL_DATA ? RPC_URL_DATA.rpc_url : null,
+            REQUIRED_NETWORK_NAME: REQUIRED_NETWORK_NAME
+        };
+
+        // 2. Definición de las referencias del DOM que necesita el módulo
+        const DOM_ELEMENTS = {
+            statusTextEl: document.getElementById('metamask-status-text'),
+            metamaskStatusCard: document.getElementById('metamask-status-card'),
+            connectMetamaskBtn: document.getElementById('connect-metamask-btn'),
+            executionFormsContainer: document.getElementById('execution-forms-container'),
+            
+            // Referencias para el balance del contrato
+            contractBalanceDisplay: document.getElementById('contractBalanceDisplay'),
+            refreshBalanceBtn: document.getElementById('refreshBalanceBtn'),
+            balanceStatus: document.getElementById('balanceStatus')
+        };
+
+        // 3. Definir las funciones objetivo Específicas para ESTE dashboard (Hash Pool)
+        const HASPOOL_ADMIN_FUNCTIONS = [
+            // Funciones de escritura (Write)
+            'addTokenToPool', 
+            'removeTokenFromPool', 
+            'depositFunds', // Generalmente permite enviar fondos nativos (ETH)
+            'setPlatformFee',
+            'setLiquidityThreshold', 
+            
+            // Funciones de lectura (Read)
+            'getPoolBalance', // Asume que existe una función para obtener el balance del pool de un token específico
+            'isTokenSupported',
+            'poolOwner',
+            'platformFeeBasisPoints',
+            'liquidityThreshold'
+        ];
+
+        // 4. Inicializar el módulo externo
+        AdminDashboard = AdminDashboardUtils(CONTRACT_CONFIG, DOM_ELEMENTS, HASPOOL_ADMIN_FUNCTIONS);
+
+        
+        // 5. LÓGICA PARA EL BALANCE DEL CONTRATO (Reutilizada del panel de Tickets)
+        
+        /**
+         * Actualiza la interfaz de usuario con el balance nativo (ETH) del contrato.
+         */
+        const updateBalanceUI = async () => {
+            if (!AdminDashboard || !DOM_ELEMENTS.contractBalanceDisplay) return;
+
+            // Bloquear UI
+            DOM_ELEMENTS.balanceStatus.textContent = 'Consultando la blockchain...';
+            DOM_ELEMENTS.contractBalanceDisplay.textContent = '...';
+            DOM_ELEMENTS.refreshBalanceBtn.disabled = true;
+            DOM_ELEMENTS.refreshBalanceBtn.classList.remove('btn-outline-warning');
+            DOM_ELEMENTS.refreshBalanceBtn.classList.add('btn-secondary');
+
+            try {
+                // Llamar a la función del módulo que consulta el balance.
+                const balance = await AdminDashboard.fetchContractBalance();
+                
+                DOM_ELEMENTS.contractBalanceDisplay.textContent = balance;
+                DOM_ELEMENTS.balanceStatus.textContent = `Última actualización: ${new Date().toLocaleTimeString()}`;
+                
+                // Actualizar Liquidez Total (Placeholder simple, podría mejorarse llamando a getPoolBalance si existiera sin parámetros)
+                document.getElementById('totalLiquidityDisplay').textContent = balance;
+                
+            } catch (e) {
+                console.error("Fallo al actualizar el balance:", e);
+                DOM_ELEMENTS.contractBalanceDisplay.textContent = 'ERROR';
+                DOM_ELEMENTS.balanceStatus.textContent = 'Error al consultar el balance.';
+            } finally {
+                // Desbloquear UI
+                DOM_ELEMENTS.refreshBalanceBtn.disabled = false;
+                DOM_ELEMENTS.refreshBalanceBtn.classList.add('btn-outline-warning');
+                DOM_ELEMENTS.refreshBalanceBtn.classList.remove('btn-secondary');
+            }
+        };
+
+        // 6. Conexión de Eventos
+        
+        // Iniciar la conexión de la wallet
+        DOM_ELEMENTS.connectMetamaskBtn.addEventListener('click', AdminDashboard.connectWallet); 
+        
+        // Conectar la lógica de balance
+        DOM_ELEMENTS.refreshBalanceBtn.addEventListener('click', updateBalanceUI);
+        
+        // 7. Inicio
+        
+        // Iniciar la consulta de balance al cargar
+        updateBalanceUI(); 
+
+        // Refrescar automáticamente cada 60 segundos
+        setInterval(updateBalanceUI, 60000); 
+        
+        // Iniciar la conexión de la wallet (llama a connectWallet() dentro)
+        AdminDashboard.connectWallet(); 
+    });
+</script>
+{% endblock %}

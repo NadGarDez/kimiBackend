@@ -5,5 +5,5 @@ from . import views
 app_name = 'hashPool'
 
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('', views.hashPoolAdminDashboard, name='index'),
 ]
