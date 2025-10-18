@@ -1,15 +1,13 @@
 from django.shortcuts import render
 # Asegúrate de que las importaciones de la blockchain (w3) y los modelos sean correctas
 from kimi_backend.blockchainClient import w3 
-from contractRegistry.models import DeployedContract, BaseContract
+from contractRegistry.models import DeployedContract, GlobalEventLog
 from django.db.models import Sum 
 
 # ==============================================================================
 # IMPORTANTE: Reemplaza 'HashPoolEventLog' con tu modelo de log de eventos real.
 # Si estás usando un modelo genérico, ajusta el nombre de la importación.
 # ==============================================================================
-from .models import HashPoolEventLog 
-
 
 def hashPoolAdminDashboard(request):
     """
@@ -35,7 +33,7 @@ def hashPoolAdminDashboard(request):
     
     # 2. Obtener los eventos recientes del contrato actual
     # Usamos HashPoolEventLog (debes asegurarte de que este modelo exista)
-    recent_events = HashPoolEventLog.objects.filter(
+    recent_events = GlobalEventLog.objects.filter(
         deployed_contract=current_contract
     ).order_by('-timestamp')[:10]
 

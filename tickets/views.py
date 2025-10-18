@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from kimi_backend.blockchainClient import w3
 from contractRegistry.models import DeployedContract, BaseContract
-from .models import TicketEventLog
+from contractRegistry.models import GlobalEventLog
 from django.db.models import Sum 
 
 
