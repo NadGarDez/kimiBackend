@@ -428,15 +428,16 @@ def get_version_args(request, version_id):
         return JsonResponse({'error': f"Error interno del servidor: {e}"}, status=500)
     
     
+@require_POST
 def final_deployment_step(request, deployed_contract_id):
     """
     Vista API para que el frontend llame una vez que la transacción de despliegue 
-    ha sido confirmada en la red. Actualiza el registro con la dirección y estado.
+    ha sido confirmada en la red. Actualiza el registro con la dirección, estado, 
+    y asegura que SÓLO esta instancia quede marcada como 'is_current=True'.
     """
-    if request.method != "POST":
-        return JsonResponse({'error': 'Método no permitido'}, status=405)
     
     try:
+        # 1. Obtener el objeto DeployedContract
         deployed_contract = DeployedContract.objects.get(pk=deployed_contract_id)
         
         data = json.loads(request.body)
@@ -444,22 +445,40 @@ def final_deployment_step(request, deployed_contract_id):
         gas_used = data.get('gas_used')
         
         if not contract_address or not gas_used:
-            return JsonResponse({'error': 'Faltan datos obligatorios'}, status=400)
+            return JsonResponse({'error': 'Faltan datos obligatorios (contract_address o gas_used).'}, status=400)
         
-        deployed_contract.address = contract_address
-        deployed_contract.gas_used = gas_used
-        deployed_contract.status = DeploymentStatus.CONFIRMED
-        deployed_contract.is_current = True
-        deployed_contract.save()
         
-        return JsonResponse({'status': 'actualizado'})
+        with transaction.atomic():
+            
+            base_contract_id = deployed_contract.base_contract_id
+            network_id = deployed_contract.network_id
+
+            DeployedContract.objects.filter(
+                base_contract_id=base_contract_id,
+                network_id=network_id,
+                is_current=True
+            ).exclude(pk=deployed_contract.pk).update(is_current=False)
+
+            deployed_contract.address = contract_address
+            deployed_contract.gas_used = gas_used
+            deployed_contract.status = DeploymentStatus.CONFIRMED
+            deployed_contract.is_current = True 
+            
+            deployed_contract.save()
+            
+        
+        return JsonResponse({'status': 'actualizado', 'message': 'Despliegue confirmado y marcado como actual.'})
     
     except DeployedContract.DoesNotExist:
         return JsonResponse({'error': 'Registro de despliegue no encontrado'}, status=404)
     
     except json.JSONDecodeError:
         return JsonResponse({'error': 'Cuerpo de petición no es JSON válido'}, status=400)
-    
+        
+    except IntegrityError as e:
+        # Esto atraparía errores si, por alguna razón, fallara la desactivación.
+        return JsonResponse({'error': f'Error de integridad de base de datos durante la activación: {e}'}, status=409)
+
     except Exception as e:
         print(f"Error al actualizar el despliegue: {e}")
         return JsonResponse({'error': f'Error interno del servidor: {e}'}, status=500)

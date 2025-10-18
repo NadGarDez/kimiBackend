@@ -417,19 +417,9 @@
 
         // 3. Definir las funciones objetivo Específicas para ESTE dashboard (Hash Pool)
         const HASPOOL_ADMIN_FUNCTIONS = [
-            // Funciones de escritura (Write)
-            'addTokenToPool', 
-            'removeTokenFromPool', 
-            'depositFunds', // Generalmente permite enviar fondos nativos (ETH)
-            'setPlatformFee',
-            'setLiquidityThreshold', 
-            
-            // Funciones de lectura (Read)
-            'getPoolBalance', // Asume que existe una función para obtener el balance del pool de un token específico
-            'isTokenSupported',
-            'poolOwner',
-            'platformFeeBasisPoints',
-            'liquidityThreshold'
+            'createNewPool', 
+            'getPoolCount', 
+            'getAllDeployedPools'
         ];
 
         // 4. Inicializar el módulo externo
