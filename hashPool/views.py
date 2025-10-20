@@ -16,29 +16,23 @@ def hashPoolAdminDashboard(request):
     """
     
     try:
-        # 1. Buscar el contrato Hash Pool Admin activo
         current_contract = DeployedContract.objects.filter(
-            base_contract__name='HashPoolAdmin', # <-- Nombre del contrato base
+            base_contract__name='HashPool', 
             is_current = True
         ).latest('updated_at')
         
     except DeployedContract.DoesNotExist:
-        # Manejo de error si no se encuentra el contrato
         context = {
             'error_message': 'No se encontró un contrato "HashPoolAdmin" activo y vigente. Por favor, despliega uno.'
         }
-        # Renderiza la plantilla del pool con el mensaje de error
         return render(request, 'hashpool/hashpool_admin_panel.html', context)
     
     
-    # 2. Obtener los eventos recientes del contrato actual
-    # Usamos HashPoolEventLog (debes asegurarte de que este modelo exista)
     recent_events = GlobalEventLog.objects.filter(
         deployed_contract=current_contract
     ).order_by('-timestamp')[:10]
 
 
-    # 3. Obtener el ABI del contrato
     contract_abi = current_contract.contract_version.abi
     
     
@@ -67,7 +61,6 @@ def hashPoolAdminDashboard(request):
     # ==========================================================================
     
     stats = {
-        # Usamos los valores quemados
         'total_pool_deposits': total_deposits_burned, 
         'total_pool_transactions': total_pool_transactions_burned,
     }

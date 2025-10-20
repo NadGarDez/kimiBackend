@@ -23,14 +23,14 @@ def ticketDashboard(request):
         return render(request, 'tickets/dashboard.html', context)
     
     
-    recent_events = TicketEventLog.objects.filter(
+    recent_events = GlobalEventLog.objects.filter(
         deployed_contract=current_contract
     ).order_by('-timestamp')[:10]
     
     contract_abi = current_contract.contract_version.abi
     
     
-    total_ingresos = TicketEventLog.objects.filter(
+    total_ingresos = GlobalEventLog.objects.filter(
         deployed_contract=current_contract, 
         event_name='PurchasedTicket' # Usamos el evento específico de compra
     ).aggregate(
@@ -39,7 +39,7 @@ def ticketDashboard(request):
     )['total_amount'] or 0
     
     # Contar la cantidad de eventos de tickets comprados (cada evento es un ticket o una compra)
-    total_tickets_comprados = TicketEventLog.objects.filter(
+    total_tickets_comprados = GlobalEventLog.objects.filter(
         deployed_contract=current_contract,
         event_name='PurchasedTicket'
     ).count()
