@@ -170,6 +170,14 @@ const AdminDashboardUtils = (config, dom, targetFunctions) => {
         connectWallet();
     };
 
+    /** Reemplazador de BigInt para JSON.stringify */
+    const BigIntReplacer = (key, value) => {
+        // Si el valor es de tipo BigInt, conviértelo a string.
+        if (typeof value === 'bigint') {
+            return value.toString();
+        }
+        return value;
+    }
 
     // --- Lógica de Ejecución de Contrato ---
 
@@ -235,7 +243,7 @@ const AdminDashboardUtils = (config, dom, targetFunctions) => {
                 // Mostrar resultado de lectura
                 resultDiv.innerHTML = `<div class="text-success small fw-bold mt-2">
                     <i class="bi bi-clipboard-check-fill me-1"></i> Resultado de la Consulta:
-                    <pre class="mb-0 text-success bg-dark p-1 rounded" style="overflow-wrap: break-word;">${JSON.stringify(result, null, 2)}</pre>
+                    <pre class="mb-0 text-success bg-dark p-1 rounded" style="overflow-wrap: break-word;">${JSON.stringify(result, BigIntReplacer, 2)}</pre>
                 </div>`;
 
             } else {
