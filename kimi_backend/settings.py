@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'partidas.apps.PartidasConfig',
     'tickets.apps.TicketsConfig',
     'hashPool.apps.HashpoolConfig',
+    'events.apps.EventsConfig',
     'contractRegistry.apps.ContractregistryConfig',
     'system_address_manager.apps.SystemAddressManagerConfig',
     'bootstrap5',
