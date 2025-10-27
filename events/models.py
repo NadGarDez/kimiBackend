@@ -1,5 +1,5 @@
 from django.db import models
-from contractRegistry.models import DeployedContract, DeployedContractVersion 
+from contractRegistry.models import DeployedContract 
 # Create your models here.
 
 class GlobalEventLog(models.Model):
@@ -50,7 +50,7 @@ class EventSubscription(models.Model):
     class Meta:
         verbose_name = "Suscripción de Evento"
         verbose_name_plural = "Suscripciones de Eventos"
-        unique_together = ('contract_version', 'event_name')
+        unique_together = ('deployed_contract', 'event_name')
 
     def __str__(self):
         return f"Suscripción a {self.event_name} para {self.contract_version}" 

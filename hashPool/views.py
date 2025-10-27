@@ -1,8 +1,9 @@
 from django.shortcuts import render
 # Asegúrate de que las importaciones de la blockchain (w3) y los modelos sean correctas
 from kimi_backend.blockchainClient import w3 
-from contractRegistry.models import DeployedContract, GlobalEventLog
+from contractRegistry.models import DeployedContract
 from django.db.models import Sum 
+from events.models import GlobalEventLog
 
 # ==============================================================================
 # IMPORTANTE: Reemplaza 'HashPoolEventLog' con tu modelo de log de eventos real.
