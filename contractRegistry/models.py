@@ -52,6 +52,7 @@ class Network(models.Model):
     """
     name = models.CharField(max_length=100, unique=True)
     rpc_url = models.URLField()
+    wss_url = models.URLField(blank=True, null=True)
     chain_id = models.PositiveIntegerField(unique=True)
     
     def __str__(self):
